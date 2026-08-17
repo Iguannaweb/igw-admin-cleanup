@@ -4,7 +4,7 @@ Tags: admin, dashboard, cleanup, css, hide
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.1.1
+Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -110,6 +110,15 @@ Not currently in all cases. Elements added dynamically after the initial page lo
 3. Example of the WordPress administration area before and after using IGW Admin Cleanup.
 
 == Changelog ==
+
+= 0.2.0 =
+* Import from old textarea
+* List with more information
+* Filters
+* Mini dashboard
+
+= 0.1.2 =
+* File name like folder name
 
 = 0.1.1 =
 * All strings in english
