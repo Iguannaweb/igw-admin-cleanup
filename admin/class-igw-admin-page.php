@@ -47,6 +47,8 @@ class IGW_Admin_Cleaner_Admin_Page
 			'admin_enqueue_scripts',
 			[$this, 'enqueue_assets']
 		);
+		
+		
 	}
 
 
@@ -58,8 +60,8 @@ class IGW_Admin_Cleaner_Admin_Page
 	public function register_menu()
 	{
 		add_options_page(
-			__('IGW Admin Cleaner', 'igw-admin-cleaner'),
-			__('IGW Admin Cleaner', 'igw-admin-cleaner'),
+			__('IGW Admin Cleanup', 'igw-admin-cleaner'),
+			__('IGW Admin Cleanup', 'igw-admin-cleaner'),
 			'manage_options',
 			self::MENU_SLUG,
 			[$this, 'render_page']
@@ -95,9 +97,22 @@ class IGW_Admin_Cleaner_Admin_Page
 			);
 		}
 		
-		$form_class = $editing_rule
-		? 'is-open'
-		: 'is-close';
+		$captured_selector = isset($_GET['igw_selector'])
+		? wp_unslash($_GET['igw_selector'])
+		: '';
+		
+		$captured_name = isset($_GET['igw_name'])
+		? sanitize_text_field(
+			wp_unslash($_GET['igw_name'])
+		)
+		: '';
+		
+		$form_class = (
+			$editing_rule ||
+			!empty($captured_selector)
+		)
+			? 'is-open'
+			: 'is-close';
 
 		?>
 		<div class="wrap igw-admin-cleaner-wrap">
@@ -108,15 +123,15 @@ class IGW_Admin_Cleaner_Admin_Page
 				
 				<h1>
 					<?php esc_html_e(
-						'IGW Admin Cleaner',
-						'igw-admin-cleaner'
+						'IGW Admin Cleanup',
+						'igw-admin-cleanup'
 					); ?>
 				</h1>
 		
 				<p>
 					<?php esc_html_e(
 						'Manage cleanup rules and keep your WordPress admin area free from unnecessary elements.',
-						'igw-admin-cleaner'
+						'igw-admin-cleanup'
 					); ?>
 				</p>
 				<?php
@@ -152,7 +167,7 @@ class IGW_Admin_Cleaner_Admin_Page
 						<span class="igw-admin-cleaner-summary__label">
 							<?php esc_html_e(
 								'Total rules',
-								'igw-admin-cleaner'
+								'igw-admin-cleanup'
 							); ?>
 						</span>
 					</div>
@@ -166,7 +181,7 @@ class IGW_Admin_Cleaner_Admin_Page
 						<span class="igw-admin-cleaner-summary__label">
 							<?php esc_html_e(
 								'Active rules',
-								'igw-admin-cleaner'
+								'igw-admin-cleanup'
 							); ?>
 						</span>
 					</div>
@@ -180,7 +195,7 @@ class IGW_Admin_Cleaner_Admin_Page
 						<span class="igw-admin-cleaner-summary__label">
 							<?php esc_html_e(
 								'Detected rules',
-								'igw-admin-cleaner'
+								'igw-admin-cleanup'
 							); ?>
 						</span>
 					</div>
@@ -194,7 +209,7 @@ class IGW_Admin_Cleaner_Admin_Page
 						<span class="igw-admin-cleaner-summary__label">
 							<?php esc_html_e(
 								'Never detected',
-								'igw-admin-cleaner'
+								'igw-admin-cleanup'
 							); ?>
 						</span>
 					</div>
@@ -211,7 +226,18 @@ class IGW_Admin_Cleaner_Admin_Page
 				>
 					<?php esc_html_e(
 						'Add rule',
-						'igw-admin-cleaner'
+						'igw-admin-cleanup'
+					); ?>
+				</button>
+				
+				<button
+					type="button"
+					class="button"
+					id="igw-admin-cleaner-select-element"
+				>
+					<?php esc_html_e(
+						'Select element',
+						'igw-admin-cleanup'
 					); ?>
 				</button>
 			
@@ -231,8 +257,8 @@ class IGW_Admin_Cleaner_Admin_Page
 					<h2>
 						<?php
 						echo $editing_rule
-							? esc_html__('Edit rule', 'igw-admin-cleaner')
-							: esc_html__('Add new rule', 'igw-admin-cleaner');
+							? esc_html__('Edit rule', 'igw-admin-cleanup')
+							: esc_html__('Add new rule', 'igw-admin-cleanup');
 						?>
 					</h2>
 				</div>
@@ -241,7 +267,9 @@ class IGW_Admin_Cleaner_Admin_Page
 			
 					<?php
 					$this->render_rule_form(
-						$editing_rule
+						$editing_rule,
+						$captured_selector,
+						$captured_name
 					);
 					?>
 			
@@ -258,7 +286,7 @@ class IGW_Admin_Cleaner_Admin_Page
 					<h2>
 						<?php esc_html_e(
 							'Cleanup rules',
-							'igw-admin-cleaner'
+							'igw-admin-cleanup'
 						); ?>
 					</h2>
 			
@@ -275,7 +303,7 @@ class IGW_Admin_Cleaner_Admin_Page
 								id="igw-rule-search"
 								placeholder="<?php esc_attr_e(
 									'Search rules...',
-									'igw-admin-cleaner'
+									'igw-admin-cleanup'
 								); ?>"
 							>
 					
@@ -289,21 +317,21 @@ class IGW_Admin_Cleaner_Admin_Page
 								<option value="">
 									<?php esc_html_e(
 										'All statuses',
-										'igw-admin-cleaner'
+										'igw-admin-cleanup'
 									); ?>
 								</option>
 					
 								<option value="active">
 									<?php esc_html_e(
 										'Active',
-										'igw-admin-cleaner'
+										'igw-admin-cleanup'
 									); ?>
 								</option>
 					
 								<option value="disabled">
 									<?php esc_html_e(
 										'Disabled',
-										'igw-admin-cleaner'
+										'igw-admin-cleanup'
 									); ?>
 								</option>
 					
@@ -319,28 +347,28 @@ class IGW_Admin_Cleaner_Admin_Page
 								<option value="">
 									<?php esc_html_e(
 										'All detections',
-										'igw-admin-cleaner'
+										'igw-admin-cleanup'
 									); ?>
 								</option>
 					
 								<option value="recent">
 									<?php esc_html_e(
 										'Detected recently',
-										'igw-admin-cleaner'
+										'igw-admin-cleanup'
 									); ?>
 								</option>
 					
 								<option value="never">
 									<?php esc_html_e(
 										'Never detected',
-										'igw-admin-cleaner'
+										'igw-admin-cleanup'
 									); ?>
 								</option>
 					
 								<option value="warning">
 									<?php esc_html_e(
 										'Not seen recently',
-										'igw-admin-cleaner'
+										'igw-admin-cleanup'
 									); ?>
 								</option>
 					
@@ -356,7 +384,7 @@ class IGW_Admin_Cleaner_Admin_Page
 								<option value="">
 									<?php esc_html_e(
 										'All plugins',
-										'igw-admin-cleaner'
+										'igw-admin-cleanup'
 									); ?>
 								</option>
 					
@@ -400,7 +428,7 @@ class IGW_Admin_Cleaner_Admin_Page
 						>
 							<?php esc_html_e(
 								'Reset filters',
-								'igw-admin-cleaner'
+								'igw-admin-cleanup'
 							); ?>
 						</button>
 					
@@ -413,7 +441,7 @@ class IGW_Admin_Cleaner_Admin_Page
 						
 							<?php esc_html_e(
 								'of',
-								'igw-admin-cleaner'
+								'igw-admin-cleanup'
 							); ?>
 						
 							<span id="igw-rule-total-count">
@@ -422,7 +450,7 @@ class IGW_Admin_Cleaner_Admin_Page
 						
 							<?php esc_html_e(
 								'rules',
-								'igw-admin-cleaner'
+								'igw-admin-cleanup'
 							); ?>
 						
 						</div>
@@ -438,14 +466,14 @@ class IGW_Admin_Cleaner_Admin_Page
 							<h3>
 								<?php esc_html_e(
 									'No cleanup rules yet',
-									'igw-admin-cleaner'
+									'igw-admin-cleanup'
 								); ?>
 							</h3>
 			
 							<p>
 								<?php esc_html_e(
 									'Create your first rule to start cleaning unnecessary elements from the WordPress admin area.',
-									'igw-admin-cleaner'
+									'igw-admin-cleanup'
 								); ?>
 							</p>
 			
@@ -474,13 +502,15 @@ class IGW_Admin_Cleaner_Admin_Page
 	 * @param array|null $rule Existing rule.
 	 * @return void
 	 */
-	private function render_rule_form($rule = null)
+	private function render_rule_form($rule = null,$captured_selector = '',$captured_name = '')
 	{
 		$rule_id = $rule['id'] ?? '';
 
-		$name = $rule['name'] ?? '';
+		$name = $rule['name']
+		?? $captured_name;
 
-		$selector = $rule['selector'] ?? '';
+		$selector = $rule['selector']
+		?? $captured_selector;
 
 		$source = $rule['source'] ?? '';
 
@@ -523,7 +553,7 @@ class IGW_Admin_Cleaner_Admin_Page
 				<tr>
 					<th scope="row">
 						<label for="igw_rule_name">
-							<?php esc_html_e('Name', 'igw-admin-cleaner'); ?>
+							<?php esc_html_e('Name', 'igw-admin-cleanup'); ?>
 						</label>
 					</th>
 
@@ -539,7 +569,7 @@ class IGW_Admin_Cleaner_Admin_Page
 						<p class="description">
 							<?php esc_html_e(
 								'A descriptive name to identify the rule.',
-								'igw-admin-cleaner'
+								'igw-admin-cleanup'
 							); ?>
 						</p>
 					</td>
@@ -549,7 +579,7 @@ class IGW_Admin_Cleaner_Admin_Page
 				<tr>
 					<th scope="row">
 						<label for="igw_rule_selector">
-							<?php esc_html_e('CSS selector', 'igw-admin-cleaner'); ?>
+							<?php esc_html_e('CSS selector', 'igw-admin-cleanup'); ?>
 						</label>
 					</th>
 
@@ -566,7 +596,7 @@ class IGW_Admin_Cleaner_Admin_Page
 						<p class="description">
 							<?php esc_html_e(
 								'For example: #wfMenuCallout or .plugin-upgrade-banner',
-								'igw-admin-cleaner'
+								'igw-admin-cleanup'
 							); ?>
 						</p>
 					</td>
@@ -576,7 +606,7 @@ class IGW_Admin_Cleaner_Admin_Page
 				<tr>
 					<th scope="row">
 						<label for="igw_rule_source">
-							<?php esc_html_e('Plugin / source', 'igw-admin-cleaner'); ?>
+							<?php esc_html_e('Plugin / source', 'igw-admin-cleanup'); ?>
 						</label>
 					</th>
 
@@ -592,7 +622,7 @@ class IGW_Admin_Cleaner_Admin_Page
 						<p class="description">
 							<?php esc_html_e(
 								'Optional. Example: Wordfence, Elementor, Rank Math...',
-								'igw-admin-cleaner'
+								'igw-admin-cleanup'
 							); ?>
 						</p>
 					</td>
@@ -602,7 +632,7 @@ class IGW_Admin_Cleaner_Admin_Page
 				<tr>
 					<th scope="row">
 						<label for="igw_rule_source_slug">
-							<?php esc_html_e('Source slug', 'igw-admin-cleaner'); ?>
+							<?php esc_html_e('Source slug', 'igw-admin-cleanup'); ?>
 						</label>
 					</th>
 
@@ -621,7 +651,7 @@ class IGW_Admin_Cleaner_Admin_Page
 				<tr>
 					<th scope="row">
 						<label for="igw_rule_action">
-							<?php esc_html_e('Action', 'igw-admin-cleaner'); ?>
+							<?php esc_html_e('Action', 'igw-admin-cleanup'); ?>
 						</label>
 					</th>
 
@@ -636,7 +666,7 @@ class IGW_Admin_Cleaner_Admin_Page
 							>
 								<?php esc_html_e(
 									'Hide selected element',
-									'igw-admin-cleaner'
+									'igw-admin-cleanup'
 								); ?>
 							</option>
 
@@ -646,7 +676,7 @@ class IGW_Admin_Cleaner_Admin_Page
 							>
 								<?php esc_html_e(
 									'Hide direct parent',
-									'igw-admin-cleaner'
+									'igw-admin-cleanup'
 								); ?>
 							</option>
 
@@ -656,7 +686,7 @@ class IGW_Admin_Cleaner_Admin_Page
 							>
 								<?php esc_html_e(
 									'Hide closest <li>',
-									'igw-admin-cleaner'
+									'igw-admin-cleanup'
 								); ?>
 							</option>
 
@@ -666,7 +696,7 @@ class IGW_Admin_Cleaner_Admin_Page
 							>
 								<?php esc_html_e(
 									'Remove element',
-									'igw-admin-cleaner'
+									'igw-admin-cleanup'
 								); ?>
 							</option>
 						</select>
@@ -676,7 +706,7 @@ class IGW_Admin_Cleaner_Admin_Page
 
 				<tr>
 					<th scope="row">
-						<?php esc_html_e('Status', 'igw-admin-cleaner'); ?>
+						<?php esc_html_e('Status', 'igw-admin-cleanup'); ?>
 					</th>
 
 					<td>
@@ -690,7 +720,7 @@ class IGW_Admin_Cleaner_Admin_Page
 
 							<?php esc_html_e(
 								'Enable this rule',
-								'igw-admin-cleaner'
+								'igw-admin-cleanup'
 							); ?>
 						</label>
 					</td>
@@ -701,8 +731,8 @@ class IGW_Admin_Cleaner_Admin_Page
 			<?php
 			submit_button(
 				$rule
-					? __('Update rule', 'igw-admin-cleaner')
-					: __('Add rule', 'igw-admin-cleaner')
+					? __('Update rule', 'igw-admin-cleanup')
+					: __('Add rule', 'igw-admin-cleanup')
 			);
 			?>
 
@@ -718,7 +748,7 @@ class IGW_Admin_Cleaner_Admin_Page
 				>
 					<?php esc_html_e(
 						'Cancel',
-						'igw-admin-cleaner'
+						'igw-admin-cleanup'
 					); ?>
 				</a>
 
@@ -742,17 +772,17 @@ class IGW_Admin_Cleaner_Admin_Page
 			
 			<thead>
 				<tr>
-					<th><?php esc_html_e('Status', 'igw-admin-cleaner'); ?></th>
-					<th><?php esc_html_e('Name', 'igw-admin-cleaner'); ?></th>
-					<th><?php esc_html_e('Selector', 'igw-admin-cleaner'); ?></th>
-					<th><?php esc_html_e('Action', 'igw-admin-cleaner'); ?></th>
+					<th><?php esc_html_e('Status', 'igw-admin-cleanup'); ?></th>
+					<th><?php esc_html_e('Name', 'igw-admin-cleanup'); ?></th>
+					<th><?php esc_html_e('Selector', 'igw-admin-cleanup'); ?></th>
+					<th><?php esc_html_e('Action', 'igw-admin-cleanup'); ?></th>
 					<th class="igw-col-detection">
 						<?php esc_html_e(
 							'Detection',
-							'igw-admin-cleaner'
+							'igw-admin-cleanup'
 						); ?>
 					</th>
-					<th><?php esc_html_e('Actions', 'igw-admin-cleaner'); ?></th>
+					<th><?php esc_html_e('Actions', 'igw-admin-cleanup'); ?></th>
 				</tr>
 			</thead>
 
@@ -816,7 +846,7 @@ class IGW_Admin_Cleaner_Admin_Page
 							<span class="igw-admin-cleaner-badge igw-admin-cleaner-badge--active">
 								<?php esc_html_e(
 									'Active',
-									'igw-admin-cleaner'
+									'igw-admin-cleanup'
 								); ?>
 							</span>
 						
@@ -825,7 +855,7 @@ class IGW_Admin_Cleaner_Admin_Page
 							<span class="igw-admin-cleaner-badge igw-admin-cleaner-badge--disabled">
 								<?php esc_html_e(
 									'Disabled',
-									'igw-admin-cleaner'
+									'igw-admin-cleanup'
 								); ?>
 							</span>
 						
@@ -897,7 +927,7 @@ class IGW_Admin_Cleaner_Admin_Page
 							>
 								<?php esc_html_e(
 									'Edit',
-									'igw-admin-cleaner'
+									'igw-admin-cleanup'
 								); ?>
 							</a>
 					
@@ -921,11 +951,11 @@ class IGW_Admin_Cleaner_Admin_Page
 								echo !empty($rule['enabled'])
 									? esc_html__(
 										'Disable',
-										'igw-admin-cleaner'
+										'igw-admin-cleanup'
 									)
 									: esc_html__(
 										'Enable',
-										'igw-admin-cleaner'
+										'igw-admin-cleanup'
 									);
 								?>
 							</a>
@@ -948,13 +978,13 @@ class IGW_Admin_Cleaner_Admin_Page
 								onclick="return confirm('<?php echo esc_js(
 									__(
 										'Are you sure you want to delete this rule?',
-										'igw-admin-cleaner'
+										'igw-admin-cleanup'
 									)
 								); ?>');"
 							>
 								<?php esc_html_e(
 									'Delete',
-									'igw-admin-cleaner'
+									'igw-admin-cleanup'
 								); ?>
 							</a>
 					
@@ -984,7 +1014,7 @@ class IGW_Admin_Cleaner_Admin_Page
 			wp_die(
 				esc_html__(
 					'You do not have permission to perform this action.',
-					'igw-admin-cleaner'
+					'igw-admin-cleanup'
 				)
 			);
 		}
@@ -1065,7 +1095,7 @@ class IGW_Admin_Cleaner_Admin_Page
 			wp_die(
 				esc_html__(
 					'You do not have permission to perform this action.',
-					'igw-admin-cleaner'
+					'igw-admin-cleanup'
 				)
 			);
 		}
@@ -1099,7 +1129,7 @@ class IGW_Admin_Cleaner_Admin_Page
 			wp_die(
 				esc_html__(
 					'You do not have permission to perform this action.',
-					'igw-admin-cleaner'
+					'igw-admin-cleanup'
 				)
 			);
 		}
@@ -1147,22 +1177,22 @@ class IGW_Admin_Cleaner_Admin_Page
 		$messages = [
 			'created' => __(
 				'Rule created successfully.',
-				'igw-admin-cleaner'
+				'igw-admin-cleanup'
 			),
 
 			'updated' => __(
 				'Rule updated successfully.',
-				'igw-admin-cleaner'
+				'igw-admin-cleanup'
 			),
 
 			'deleted' => __(
 				'Rule deleted successfully.',
-				'igw-admin-cleaner'
+				'igw-admin-cleanup'
 			),
 
 			'toggled' => __(
 				'Rule status updated.',
-				'igw-admin-cleaner'
+				'igw-admin-cleanup'
 			),
 		];
 
@@ -1220,22 +1250,22 @@ class IGW_Admin_Cleaner_Admin_Page
 		$labels = [
 			'element' => __(
 				'Hide element',
-				'igw-admin-cleaner'
+				'igw-admin-cleanup'
 			),
 
 			'parent' => __(
 				'Hide parent',
-				'igw-admin-cleaner'
+				'igw-admin-cleanup'
 			),
 
 			'closest_li' => __(
 				'Hide closest <li>',
-				'igw-admin-cleaner'
+				'igw-admin-cleanup'
 			),
 
 			'remove' => __(
 				'Remove element',
-				'igw-admin-cleaner'
+				'igw-admin-cleanup'
 			),
 		];
 
@@ -1257,12 +1287,12 @@ class IGW_Admin_Cleaner_Admin_Page
 		if (!$timestamp) {
 			return __(
 				'Never',
-				'igw-admin-cleaner'
+				'igw-admin-cleanup'
 			);
 		}
 	
 		return sprintf(
-			__('%s ago', 'igw-admin-cleaner'),
+			__('%s ago', 'igw-admin-cleanup'),
 			human_time_diff(
 				$timestamp,
 				time()
@@ -1288,7 +1318,29 @@ class IGW_Admin_Cleaner_Admin_Page
 			[],
 			IGW_ADMIN_CLEANER_VERSION
 		);
+		
+		/*
+		 * Admin interface.
+		 */
+		wp_enqueue_script(
+			'igw-admin-cleaner-admin',
+			IGW_ADMIN_CLEANER_URL . 'assets/js/admin.js',
+			[
+				'wp-i18n',
+			],
+			IGW_ADMIN_CLEANER_VERSION,
+			true
+		);
+		
+		wp_set_script_translations(
+			'igw-admin-cleaner-admin',
+			'igw-admin-cleanup'
+		);
+		
+		
 	}
+	
+	
 	
 	/**
 	 * Render rule detection status.
@@ -1323,7 +1375,7 @@ class IGW_Admin_Cleaner_Admin_Page
 				<span class="igw-detection__status">
 					<?php esc_html_e(
 						'Never detected',
-						'igw-admin-cleaner'
+						'igw-admin-cleanup'
 					); ?>
 				</span>
 	
@@ -1334,7 +1386,7 @@ class IGW_Admin_Cleaner_Admin_Page
 						printf(
 							esc_html__(
 								'Checked %s ago',
-								'igw-admin-cleaner'
+								'igw-admin-cleanup'
 							),
 							esc_html(
 								human_time_diff(
@@ -1351,7 +1403,7 @@ class IGW_Admin_Cleaner_Admin_Page
 					<span class="igw-detection__meta">
 						<?php esc_html_e(
 							'Not checked yet',
-							'igw-admin-cleaner'
+							'igw-admin-cleanup'
 						); ?>
 					</span>
 	
@@ -1376,7 +1428,7 @@ class IGW_Admin_Cleaner_Admin_Page
 	
 			$status_label = __(
 				'Detected recently',
-				'igw-admin-cleaner'
+				'igw-admin-cleanup'
 			);
 	
 		} else {
@@ -1385,7 +1437,7 @@ class IGW_Admin_Cleaner_Admin_Page
 	
 			$status_label = __(
 				'Not seen recently',
-				'igw-admin-cleaner'
+				'igw-admin-cleanup'
 			);
 		}
 	
@@ -1403,7 +1455,7 @@ class IGW_Admin_Cleaner_Admin_Page
 				printf(
 					esc_html__(
 						'Seen %1$s ago · %2$d detections',
-						'igw-admin-cleaner'
+						'igw-admin-cleanup'
 					),
 					esc_html(
 						human_time_diff(
@@ -1425,7 +1477,7 @@ class IGW_Admin_Cleaner_Admin_Page
 					printf(
 						esc_html__(
 							'Last checked %s ago',
-							'igw-admin-cleaner'
+							'igw-admin-cleanup'
 						),
 						esc_html(
 							human_time_diff(

@@ -77,7 +77,7 @@ class IGW_Admin_Cleaner_Rules
 		if (!is_array($data)) {
 			return new WP_Error(
 				'igw_invalid_rule_data',
-				__('Invalid rule data.', 'igw-admin-cleaner')
+				__('Invalid rule data.', 'igw-admin-cleanup')
 			);
 		}
 
@@ -98,7 +98,7 @@ class IGW_Admin_Cleaner_Rules
 		if (!self::save($rules)) {
 			return new WP_Error(
 				'igw_rule_save_failed',
-				__('The rule could not be saved.', 'igw-admin-cleaner')
+				__('The rule could not be saved.', 'igw-admin-cleanup')
 			);
 		}
 
@@ -120,7 +120,7 @@ class IGW_Admin_Cleaner_Rules
 		if (empty($rule_id)) {
 			return new WP_Error(
 				'igw_invalid_rule_id',
-				__('Invalid rule ID.', 'igw-admin-cleaner')
+				__('Invalid rule ID.', 'igw-admin-cleanup')
 			);
 		}
 
@@ -129,14 +129,14 @@ class IGW_Admin_Cleaner_Rules
 		if (!isset($rules[$rule_id])) {
 			return new WP_Error(
 				'igw_rule_not_found',
-				__('The requested rule does not exist.', 'igw-admin-cleaner')
+				__('The requested rule does not exist.', 'igw-admin-cleanup')
 			);
 		}
 
 		if (!is_array($data)) {
 			return new WP_Error(
 				'igw_invalid_rule_data',
-				__('Invalid rule data.', 'igw-admin-cleaner')
+				__('Invalid rule data.', 'igw-admin-cleanup')
 			);
 		}
 
@@ -409,7 +409,7 @@ class IGW_Admin_Cleaner_Rules
 		if (empty($selector)) {
 			return new WP_Error(
 				'igw_empty_selector',
-				__('The CSS selector cannot be empty.', 'igw-admin-cleaner')
+				__('The CSS selector cannot be empty.', 'igw-admin-cleanup')
 			);
 		}
 
@@ -424,7 +424,7 @@ class IGW_Admin_Cleaner_Rules
 		if (!self::is_valid_action($action)) {
 			return new WP_Error(
 				'igw_invalid_action',
-				__('Invalid cleanup action.', 'igw-admin-cleaner')
+				__('Invalid cleanup action.', 'igw-admin-cleanup')
 			);
 		}
 

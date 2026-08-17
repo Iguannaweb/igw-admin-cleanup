@@ -28,13 +28,7 @@ class IGW_Admin_Cleanup
 			'admin_enqueue_scripts',
 			[$this, 'enqueue_admin_assets']
 		);
-
-		/*
-		 * AJAX endpoint used to record detected rules.
-		 *
-		 * The JavaScript engine will use this later when a selector
-		 * has actually been found in the current admin page.
-		 */
+		
 		add_action(
 			'wp_ajax_igw_admin_cleaner_rule_seen',
 			[$this, 'ajax_rule_seen']
@@ -43,6 +37,17 @@ class IGW_Admin_Cleanup
 		add_action(
 			'wp_ajax_igw_admin_cleaner_rule_checked',
 			[$this, 'ajax_rule_checked']
+		);
+		
+		add_action(
+			'admin_bar_menu',
+			[$this, 'add_admin_bar_menu'],
+			100
+		);
+		
+		add_action(
+			'admin_enqueue_scripts',
+			[$this, 'enqueue_selector_assets']
 		);
 	}
 
@@ -71,16 +76,7 @@ class IGW_Admin_Cleanup
 			IGW_ADMIN_CLEANER_VERSION,
 			true
 		);
-		/*
-		 * Admin interface JavaScript.
-		 */
-		wp_enqueue_script(
-			'igw-admin-cleaner-admin',
-			IGW_ADMIN_CLEANER_URL . 'assets/js/admin.js',
-			[],
-			IGW_ADMIN_CLEANER_VERSION,
-			true
-		);
+		
 
 
 		/*
@@ -136,7 +132,50 @@ class IGW_Admin_Cleanup
 			]
 		);
 	}
-
+	
+	/**
+	 * Load selector assets on all admin pages.
+	 *
+	 * @return void
+	 */
+	public function enqueue_selector_assets()
+	{
+		if (!current_user_can('manage_options')) {
+			return;
+		}
+	
+		wp_enqueue_script(
+			'igw-admin-cleaner-selector',
+			IGW_ADMIN_CLEANER_URL . 'assets/js/selector.js',
+			[
+				'wp-i18n',
+			],
+			IGW_ADMIN_CLEANER_VERSION,
+			true
+		);
+		
+		wp_set_script_translations(
+			'igw-admin-cleaner-selector',
+			'igw-admin-cleanup'
+		);
+	
+		wp_enqueue_style(
+			'igw-admin-cleaner-selector',
+			IGW_ADMIN_CLEANER_URL . 'assets/css/selector.css',
+			[],
+			IGW_ADMIN_CLEANER_VERSION
+		);
+	
+		wp_localize_script(
+			'igw-admin-cleaner-selector',
+			'IGWAdminCleanerSelector',
+			[
+				'adminUrl' => admin_url(
+					'options-general.php?page=igw-admin-cleaner'
+				),
+			]
+		);
+	}
 
 	/**
 	 * AJAX endpoint used to record when a rule is found.
@@ -154,7 +193,7 @@ class IGW_Admin_Cleanup
 				[
 					'message' => __(
 						'You do not have permission to perform this action.',
-						'igw-admin-cleaner'
+						'igw-admin-cleanup'
 					),
 				],
 				403
@@ -180,7 +219,7 @@ class IGW_Admin_Cleanup
 				[
 					'message' => __(
 						'Invalid rule ID.',
-						'igw-admin-cleaner'
+						'igw-admin-cleanup'
 					),
 				],
 				400
@@ -195,7 +234,7 @@ class IGW_Admin_Cleanup
 				[
 					'message' => __(
 						'The requested rule does not exist.',
-						'igw-admin-cleaner'
+						'igw-admin-cleanup'
 					),
 				],
 				404
@@ -211,7 +250,7 @@ class IGW_Admin_Cleanup
 				[
 					'message' => __(
 						'The requested rule is disabled.',
-						'igw-admin-cleaner'
+						'igw-admin-cleanup'
 					),
 				],
 				400
@@ -229,7 +268,7 @@ class IGW_Admin_Cleanup
 				[
 					'message' => __(
 						'The detection could not be recorded.',
-						'igw-admin-cleaner'
+						'igw-admin-cleanup'
 					),
 				],
 				500
@@ -256,7 +295,7 @@ class IGW_Admin_Cleanup
 				[
 					'message' => __(
 						'You do not have permission to perform this action.',
-						'igw-admin-cleaner'
+						'igw-admin-cleanup'
 					),
 				],
 				403
@@ -279,7 +318,7 @@ class IGW_Admin_Cleanup
 				[
 					'message' => __(
 						'Invalid rule ID.',
-						'igw-admin-cleaner'
+						'igw-admin-cleanup'
 					),
 				],
 				400
@@ -293,7 +332,7 @@ class IGW_Admin_Cleanup
 				[
 					'message' => __(
 						'The requested rule does not exist.',
-						'igw-admin-cleaner'
+						'igw-admin-cleanup'
 					),
 				],
 				404
@@ -305,7 +344,7 @@ class IGW_Admin_Cleanup
 				[
 					'message' => __(
 						'The requested rule is disabled.',
-						'igw-admin-cleaner'
+						'igw-admin-cleanup'
 					),
 				],
 				400
@@ -321,7 +360,7 @@ class IGW_Admin_Cleanup
 				[
 					'message' => __(
 						'The rule check could not be recorded.',
-						'igw-admin-cleaner'
+						'igw-admin-cleanup'
 					),
 				],
 				500
@@ -333,5 +372,37 @@ class IGW_Admin_Cleanup
 				'rule_id' => $rule_id,
 			]
 		);
+	}
+	
+	/**
+	 * Add IGW Admin Cleaner to WordPress admin bar.
+	 *
+	 * @param WP_Admin_Bar $wp_admin_bar Admin bar instance.
+	 * @return void
+	 */
+	public function add_admin_bar_menu($wp_admin_bar)
+	{
+		if (!current_user_can('manage_options')) {
+			return;
+		}
+	
+		$wp_admin_bar->add_node([
+			'id'    => 'igw-admin-cleaner',
+			'title' => __('IGW Admin Cleanup', 'igw-admin-cleaner'),
+			'href'  => admin_url(
+				'options-general.php?page=igw-admin-cleaner'
+			),
+		]);
+	
+	
+		$wp_admin_bar->add_node([
+			'id'     => 'igw-admin-cleaner-select-element',
+			'parent' => 'igw-admin-cleaner',
+			'title'  => __('Select element', 'igw-admin-cleaner'),
+			'href'   => '#',
+			'meta'   => [
+				'class' => 'igw-admin-cleaner-select-element',
+			],
+		]);
 	}
 }

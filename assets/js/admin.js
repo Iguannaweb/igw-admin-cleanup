@@ -1,7 +1,8 @@
 (function () {
 	'use strict';
 
-
+	const { __ } = wp.i18n;
+	
 	/**
 	 * Initialize add/edit rule panel.
 	 */

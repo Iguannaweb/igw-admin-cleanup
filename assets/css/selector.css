@@ -1,0 +1,144 @@
+/*SELECTOR*/
+/* Selector mode */
+body.igw-selector-mode {
+	cursor: crosshair !important;
+}
+
+body.igw-selector-mode * {
+	cursor: crosshair !important;
+}
+
+
+/* Highlight */
+.igw-selector-overlay {
+	position: absolute;
+	z-index: 999998;
+	pointer-events: none;
+	border: 2px solid #2271b1;
+	background: rgba(34, 113, 177, 0.08);
+	box-sizing: border-box;
+}
+
+
+/* Selector toolbar */
+.igw-selector-toolbar {
+	position: fixed;
+	top: 42px;
+	left: 50%;
+	z-index: 999999;
+	display: flex;
+	align-items: center;
+	gap: 24px;
+	min-width: 420px;
+	padding: 12px 14px;
+	transform: translateX(-50%);
+	background: #1d2327;
+	color: #fff;
+	border-radius: 6px;
+	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+}
+
+.igw-selector-toolbar__content {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	flex: 1;
+}
+
+.igw-selector-toolbar__content strong {
+	color: #fff;
+}
+
+.igw-selector-toolbar__content span {
+	color: #c3c4c7;
+	font-size: 12px;
+}
+
+
+/* Result panel */
+.igw-selector-result {
+	position: fixed;
+	top: 80px;
+	right: 24px;
+	z-index: 999999;
+	width: 420px;
+	max-width: calc(100vw - 48px);
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 8px;
+	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+}
+
+.igw-selector-result__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 14px 16px;
+	border-bottom: 1px solid #dcdcde;
+}
+
+.igw-selector-result__header strong {
+	font-size: 14px;
+}
+
+.igw-selector-result__close {
+	padding: 0;
+	border: 0;
+	background: transparent;
+	font-size: 24px;
+	line-height: 1;
+	cursor: pointer;
+	color: #646970;
+}
+
+.igw-selector-result__body {
+	padding: 16px;
+}
+
+.igw-selector-result__field {
+	margin-bottom: 14px;
+}
+
+.igw-selector-result__field:last-child {
+	margin-bottom: 0;
+}
+
+.igw-selector-result__label {
+	display: block;
+	margin-bottom: 5px;
+	font-size: 12px;
+	font-weight: 600;
+	color: #50575e;
+}
+
+.igw-selector-result__field input {
+	width: 100%;
+}
+
+.igw-selector-result__footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	padding: 12px 16px;
+	border-top: 1px solid #dcdcde;
+	background: #f6f7f7;
+	border-radius: 0 0 8px 8px;
+}
+
+
+@media screen and (max-width: 782px) {
+
+	.igw-selector-toolbar {
+		top: 56px;
+		width: calc(100% - 32px);
+		min-width: 0;
+	}
+
+	.igw-selector-result {
+		top: 70px;
+		right: 16px;
+		left: 16px;
+		width: auto;
+		max-width: none;
+	}
+}
