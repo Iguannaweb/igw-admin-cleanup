@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: IGW Admin Cleanup
- * Description: Oculta elementos innecesarios del administrador de WordPress mediante selectores CSS.
- * Version: 0.1.0
+ * Description: Hide unnecessary elements from the WordPress admin panel using CSS selectors.
+ * Version: 0.1.1
  * Author: Francisco Gálvez
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -63,12 +63,9 @@ function tinco_admin_cleaner_page()
 
     <div class="wrap">
 
-        <h1>¡Limpia tu panel de control de elementos innecesarios!</h1>
+        <h1>Clean up your control panel of unnecessary items!</h1>
 
-        <p>
-            Añade un selector CSS por línea. Los elementos encontrados
-            se ocultarán automáticamente en el administrador.
-        </p>
+        <p>Add one CSS selector per line. The elements found will be automatically hidden in the admin panel.</p>
 
         <form method="post" action="options.php">
 
@@ -80,9 +77,7 @@ function tinco_admin_cleaner_page()
                 style="width:100%;max-width:900px;font-family:monospace;"
             ><?php echo esc_textarea($selectors); ?></textarea>
 
-            <p>
-                Ejemplos:
-            </p>
+            <p>Examples:</p>
 
             <pre>
 #wfMenuCallout
@@ -132,8 +127,8 @@ add_action('admin_footer', function () {
                 document.querySelectorAll(selector).forEach(function(element) {
 
                     /*
-                     * Si el selector está dentro de un LI,
-                     * ocultamos el elemento completo del menú.
+                     * If the selector is inside an LI,
+                     * we hide the entire menu item.
                      */
                     const li = element.closest('li');
 
@@ -147,7 +142,7 @@ add_action('admin_footer', function () {
 
             } catch(e) {
                 console.warn(
-                    'IGW Admin Cleanup: selector no válido:',
+                    'IGW Admin Cleanup: invalid selector:',
                     selector
                 );
             }
