@@ -142,3 +142,27 @@ body.igw-selector-mode * {
 		max-width: none;
 	}
 }
+
+.igw-selector-result__matches {
+	margin-top: 8px;
+	padding: 8px 10px;
+	border-radius: 5px;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.igw-selector-result__matches--precise {
+	background: #edfaef;
+	color: #008a20;
+}
+
+.igw-selector-result__matches--multiple {
+	background: #fff8e5;
+	color: #996800;
+}
+
+.igw-selector-result__matches--broad,
+.igw-selector-result__matches--error {
+	background: #fcf0f1;
+	color: #b32d2e;
+}

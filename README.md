@@ -4,7 +4,7 @@ Tags: admin, dashboard, cleanup, css, hide
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.3.1
+Stable tag: 0.3.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -165,6 +165,14 @@ A recently checked rule that has not been detected does not necessarily mean the
 
 == Changelog ==
 
+= 0.3.2 =
+* Added selector match count to the assisted element selector.
+* Added visual warnings when a selector matches multiple elements.
+* Added live match count updates when editing the suggested CSS selector.
+* Added a preview option to temporarily hide matching elements before creating a rule.
+* Added a restore option to safely undo the preview.
+* Improved the assisted selector workflow to help prevent overly broad cleanup rules.
+
 = 0.3.1 =
 * Fixed the plugin text domain to match the WordPress.org plugin slug.
 * Improved compatibility with WordPress.org language packs.
@@ -203,6 +211,9 @@ A recently checked rule that has not been detected does not necessarily mean the
 * Added automatic hiding of the closest list item when applicable.
 
 == Upgrade Notice ==
+
+= 0.3.2 =
+Adds selector match information and live preview, allowing you to verify what will be hidden before creating a cleanup rule.
 
 = 0.3.1 =
 Fixes translation loading and adds Spanish language support.

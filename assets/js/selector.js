@@ -1,7 +1,12 @@
 (function () {
 	'use strict';
 	
-	const { __ } = wp.i18n;
+	const {
+		__,
+		sprintf
+	} = wp.i18n;
+	
+	const previewElements = [];
 
 	/**
 	 * Selector mode state.
@@ -559,7 +564,8 @@
 
 		const tag =
 			element.tagName.toLowerCase();
-
+		
+		
 
 		/*
 		 * Links are especially useful because promotional links
@@ -922,23 +928,22 @@
 		element,
 		selector
 	) {
-
+	
 		removeResultPanel();
-
-
+	
+	
 		resultPanel =
 			document.createElement('div');
-
-
+	
+	
 		resultPanel.className =
 			'igw-selector-result';
-
-
+	
+	
 		const tag =
 			element.tagName.toLowerCase();
-
-		
-			
+	
+	
 		const text =
 			element.textContent
 				? element.textContent
@@ -1020,31 +1025,67 @@
 						class="regular-text code"
 						value="${escapeHtmlAttribute(selector)}"
 					>
+					<div
+						class="igw-selector-result__matches"
+					>
+					</div>
 
 				</div>
+				
 
 			</div>
 
 			<div class="igw-selector-result__footer">
-
+			
+				<button
+					type="button"
+					class="button igw-selector-result__preview"
+				>
+					${escapeHtml(
+						__(
+							'Preview',
+							'igw-admin-cleanup'
+						)
+					)}
+				</button>
+			
+				<button
+					type="button"
+					class="button igw-selector-result__restore"
+					hidden
+				>
+					${escapeHtml(
+						__(
+							'Restore',
+							'igw-admin-cleanup'
+						)
+					)}
+				</button>
+			
 				<button
 					type="button"
 					class="button igw-selector-result__cancel"
 				>
 					${escapeHtml(
-						__( 'Cancel', 'igw-admin-cleanup' )
+						__(
+							'Cancel',
+							'igw-admin-cleanup'
+						)
 					)}
 				</button>
-
+			
 				<button
 					type="button"
 					class="button button-primary igw-selector-result__use"
 				>
 					${escapeHtml(
-						__( 'Use selector', 'igw-admin-cleanup' )
+						__(
+							'Use selector',
+							'igw-admin-cleanup'
+						)
 					)}
 				</button>
-
+			
 			</div>
 		`;
 
@@ -1052,6 +1093,11 @@
 		document.body.appendChild(
 			resultPanel
 		);
+		
+		/*
+		 * Show initial selector match information.
+		 */
+		updateMatchStatus(selector);
 
 
 		const closeButton =
@@ -1068,7 +1114,21 @@
 			resultPanel.querySelector(
 				'.igw-selector-result__use'
 			);
-
+		
+		const selectorInput =
+			resultPanel.querySelector(
+				'#igw-selector-result-value'
+			);
+		
+		const previewButton =
+			resultPanel.querySelector(
+				'.igw-selector-result__preview'
+			);
+		
+		const restoreButton =
+			resultPanel.querySelector(
+				'.igw-selector-result__restore'
+			);
 
 		if (closeButton) {
 
@@ -1098,9 +1158,203 @@
 			);
 
 		}
+		
+		if (previewButton) {
+		
+			previewButton.addEventListener(
+				'click',
+				function () {
+		
+					const input =
+						resultPanel.querySelector(
+							'#igw-selector-result-value'
+						);
+		
+					if (!input) {
+						return;
+					}
+		
+		
+					previewSelector(
+						input.value.trim()
+					);
+		
+		
+					previewButton.hidden = true;
+		
+					if (restoreButton) {
+						restoreButton.hidden = false;
+					}
+		
+				}
+			);
+		
+		}
+		
+		if (restoreButton) {
+		
+			restoreButton.addEventListener(
+				'click',
+				function () {
+		
+					restorePreview();
+		
+					restoreButton.hidden = true;
+		
+					if (previewButton) {
+						previewButton.hidden = false;
+					}
+		
+				}
+			);
+		
+		}
+		
+		if (selectorInput) {
+		
+			selectorInput.addEventListener(
+				'input',
+				function () {
+		
+					/*
+					 * Restore any active preview before
+					 * evaluating the new selector.
+					 */
+					restorePreview();
+		
+		
+					/*
+					 * Reset preview controls.
+					 */
+					if (previewButton) {
+						previewButton.hidden = false;
+					}
+		
+					if (restoreButton) {
+						restoreButton.hidden = true;
+					}
+		
+		
+					/*
+					 * Recalculate matches.
+					 */
+					updateMatchStatus(
+						selectorInput.value.trim()
+					);
+		
+				}
+			);
+		
+		}
 
 	}
-
+	
+	/**
+	 * Update selector match information.
+	 *
+	 * @param {string} selector
+	 */
+	function updateMatchStatus(selector) {
+	
+		if (!resultPanel) {
+			return;
+		}
+	
+		const matchesBox =
+			resultPanel.querySelector(
+				'.igw-selector-result__matches'
+			);
+	
+		if (!matchesBox) {
+			return;
+		}
+	
+		let matchCount = 0;
+		let matchStatus = 'precise';
+		let matchLabel = '';
+	
+		try {
+	
+			matchCount =
+				document.querySelectorAll(
+					selector
+				).length;
+	
+		} catch (error) {
+	
+			matchCount = 0;
+			matchStatus = 'error';
+	
+			matchLabel =
+				__(
+					'Invalid selector',
+					'igw-admin-cleanup'
+				);
+	
+		}
+	
+	
+		if (matchStatus !== 'error') {
+	
+			if (matchCount === 0) {
+	
+				matchStatus = 'error';
+	
+				matchLabel =
+					__(
+						'No matching elements',
+						'igw-admin-cleanup'
+					);
+	
+			} else if (matchCount === 1) {
+	
+				matchStatus = 'precise';
+	
+				matchLabel =
+					__(
+						'1 matching element',
+						'igw-admin-cleanup'
+					);
+	
+			} else if (matchCount <= 5) {
+	
+				matchStatus = 'multiple';
+	
+				matchLabel = sprintf(
+					__(
+						'%d matching elements',
+						'igw-admin-cleanup'
+					),
+					matchCount
+				);
+	
+			} else {
+	
+				matchStatus = 'broad';
+	
+				matchLabel = sprintf(
+					__(
+						'%d matching elements',
+						'igw-admin-cleanup'
+					),
+					matchCount
+				);
+	
+			}
+	
+		}
+	
+	
+		matchesBox.className =
+			'igw-selector-result__matches ' +
+			'igw-selector-result__matches--' +
+			matchStatus;
+	
+	
+		matchesBox.textContent =
+			matchLabel;
+	
+	}
 
 	/**
 	 * Use selected selector.
@@ -1148,7 +1402,8 @@
 			document.getElementById(
 				'igw_rule_selector'
 			);
-	
+		
+		
 	
 		/*
 		 * We are already on the IGW Admin Cleaner page.
@@ -1224,6 +1479,8 @@
 	 */
 	function removeResultPanel() {
 
+		restorePreview();
+		
 		if (!resultPanel) {
 			return;
 		}
@@ -1265,6 +1522,80 @@
 
 		return escapeHtml(value);
 
+	}
+	
+	function previewSelector(selector) {
+	
+		restorePreview();
+	
+		let elements;
+	
+		try {
+	
+			elements =
+				document.querySelectorAll(
+					selector
+				);
+	
+		} catch (error) {
+	
+			return;
+	
+		}
+	
+	
+		elements.forEach(function (element) {
+	
+			previewElements.push({
+				element: element,
+				display: element.style.display,
+				priority:
+					element.style.getPropertyPriority(
+						'display'
+					)
+			});
+	
+	
+			element.style.setProperty(
+				'display',
+				'none',
+				'important'
+			);
+	
+		});
+	
+	}
+	
+	function restorePreview() {
+	
+		previewElements.forEach(function (item) {
+	
+			if (!item.element) {
+				return;
+			}
+	
+	
+			if (item.display) {
+	
+				item.element.style.setProperty(
+					'display',
+					item.display,
+					item.priority
+				);
+	
+			} else {
+	
+				item.element.style.removeProperty(
+					'display'
+				);
+	
+			}
+	
+		});
+	
+	
+		previewElements.length = 0;
+	
 	}
 
 
