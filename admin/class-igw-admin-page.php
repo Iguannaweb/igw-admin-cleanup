@@ -107,6 +107,12 @@ class IGW_Admin_Cleaner_Admin_Page
 		)
 		: '';
 		
+		$captured_action = isset($_GET['igw_action'])
+		? sanitize_key(
+			wp_unslash($_GET['igw_action'])
+		)
+		: '';
+		
 		$form_class = (
 			$editing_rule ||
 			!empty($captured_selector)
@@ -269,7 +275,8 @@ class IGW_Admin_Cleaner_Admin_Page
 					$this->render_rule_form(
 						$editing_rule,
 						$captured_selector,
-						$captured_name
+						$captured_name,
+						$captured_action
 					);
 					?>
 			
@@ -502,7 +509,7 @@ class IGW_Admin_Cleaner_Admin_Page
 	 * @param array|null $rule Existing rule.
 	 * @return void
 	 */
-	private function render_rule_form($rule = null,$captured_selector = '',$captured_name = '')
+	private function render_rule_form($rule = null,$captured_selector = '',$captured_name = '',$captured_action = '')
 	{
 		$rule_id = $rule['id'] ?? '';
 
@@ -517,7 +524,13 @@ class IGW_Admin_Cleaner_Admin_Page
 		$source_slug = $rule['source_slug'] ?? '';
 
 		$action = $rule['action']
-			?? IGW_Admin_Cleaner_Rules::ACTION_ELEMENT;
+		?? (
+			IGW_Admin_Cleaner_Rules::is_valid_action(
+				$captured_action
+			)
+				? $captured_action
+				: IGW_Admin_Cleaner_Rules::ACTION_ELEMENT
+		);
 
 		$enabled = isset($rule['enabled'])
 			? (bool) $rule['enabled']

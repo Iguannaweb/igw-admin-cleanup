@@ -4,7 +4,7 @@ Tags: admin, dashboard, cleanup, css, hide
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.3.2
+Stable tag: 0.3.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -165,6 +165,16 @@ A recently checked rule that has not been detected does not necessarily mean the
 
 == Changelog ==
 
+= 0.3.3 =
+* Added multiple selector suggestions to the assisted element selector.
+* Added support for generating selector candidates from IDs, CSS classes, data attributes and other useful HTML attributes.
+* Added selector quality evaluation to help identify reliable and fragile selectors.
+* Added quality indicators for suggested selectors: Good option, Acceptable and Fragile.
+* Added detection of potentially dynamic selector values, including UUID-like strings, long numeric values and generated identifiers.
+* Improved selector candidate ordering based on uniqueness and estimated quality.
+* Added cleanup action selection directly to the element selector assistant.
+* Preview now reflects the selected cleanup action before creating the rule.
+
 = 0.3.2 =
 * Added selector match count to the assisted element selector.
 * Added visual warnings when a selector matches multiple elements.
@@ -211,6 +221,9 @@ A recently checked rule that has not been detected does not necessarily mean the
 * Added automatic hiding of the closest list item when applicable.
 
 == Upgrade Notice ==
+
+= 0.3.3 =
+Adds smarter selector suggestions, quality indicators and cleanup action previews to make assisted rule creation more precise and reliable.
 
 = 0.3.2 =
 Adds selector match information and live preview, allowing you to verify what will be hidden before creating a cleanup rule.

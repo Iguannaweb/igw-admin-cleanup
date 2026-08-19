@@ -157,14 +157,22 @@
 					.substring(0, 100)
 				: '';
 	
+		const candidates =
+			generateSelectorCandidates(
+				element
+			);
+		
 		const selector =
-			generateSelector(element);
+			candidates.length
+				? candidates[0].selector
+				: generateSelector(element);
 	
 		stopSelectorMode();
 	
 		showResultPanel(
 			element,
-			selector
+			selector,
+			candidates
 		);
 	}
 
@@ -461,6 +469,708 @@
 		 */
 		return generatePathSelector(element);
 
+	}
+	
+	/**
+	 * Generate multiple selector candidates for an element.
+	 *
+	 * @param {HTMLElement} element
+	 *
+	 * @return {Array}
+	 */
+	function generateSelectorCandidates(element) {
+	
+		const candidates = [];
+	
+		/**
+		 * Helper to add a candidate only once.
+		 */
+		function addCandidate(
+			selector,
+			type,
+			label
+		) {
+	
+			if (!selector) {
+				return;
+			}
+	
+			let count = 0;
+	
+			try {
+	
+				count =
+					document.querySelectorAll(
+						selector
+					).length;
+	
+			} catch (error) {
+	
+				return;
+	
+			}
+	
+			/*
+			 * Ignore selectors that do not match anything.
+			 */
+			if (!count) {
+				return;
+			}
+	
+			/*
+			 * Avoid duplicates.
+			 */
+			if (
+				candidates.some(
+					function (candidate) {
+						return (
+							candidate.selector === selector
+						);
+					}
+				)
+			) {
+				return;
+			}
+	
+			const candidate = {
+				selector: selector,
+				type: type,
+				label: label,
+				count: count
+			};
+			
+			
+			candidate.quality =
+				evaluateSelectorCandidate(
+					candidate
+				);
+			
+			
+			candidates.push(
+				candidate
+			);
+	
+		}
+	
+	
+		/*
+		 * 1. ID.
+		 */
+		if (element.id) {
+	
+			addCandidate(
+				'#' + cssEscape(element.id),
+				'id',
+				__(
+					'Unique ID',
+					'igw-admin-cleanup'
+				)
+			);
+	
+		}
+	
+	
+		/*
+		 * 2. data-* attributes.
+		 */
+		Array.from(
+			element.attributes
+		).forEach(function (attribute) {
+	
+			if (
+				!attribute.name.startsWith(
+					'data-'
+				)
+			) {
+				return;
+			}
+	
+			if (!attribute.value) {
+				return;
+			}
+	
+			addCandidate(
+				element.tagName.toLowerCase() +
+					'[' +
+					attribute.name +
+					'="' +
+					escapeAttributeValue(
+						attribute.value
+					) +
+					'"]',
+				'data',
+				sprintf(
+					__(
+						'Attribute %s',
+						'igw-admin-cleanup'
+					),
+					attribute.name
+				)
+			);
+	
+		});
+	
+	
+		/*
+		 * 3. Other useful attributes.
+		 */
+		const usefulAttributes = [
+			'aria-label',
+			'name',
+			'role',
+			'title'
+		];
+	
+		usefulAttributes.forEach(
+			function (attributeName) {
+	
+				if (
+					!element.hasAttribute(
+						attributeName
+					)
+				) {
+					return;
+				}
+	
+				const value =
+					element.getAttribute(
+						attributeName
+					);
+	
+				if (!value) {
+					return;
+				}
+	
+				addCandidate(
+					element.tagName.toLowerCase() +
+						'[' +
+						attributeName +
+						'="' +
+						escapeAttributeValue(value) +
+						'"]',
+					'attribute',
+					sprintf(
+						__(
+							'Attribute %s',
+							'igw-admin-cleanup'
+						),
+						attributeName
+					)
+				);
+	
+			}
+		);
+	
+	
+		/*
+		 * 4. href.
+		 */
+		if (
+			element.tagName.toLowerCase() === 'a' &&
+			element.hasAttribute('href')
+		) {
+	
+			const href =
+				element.getAttribute('href');
+	
+			if (href) {
+	
+				addCandidate(
+					'a[href="' +
+						escapeAttributeValue(href) +
+						'"]',
+					'attribute',
+					__(
+						'Link URL',
+						'igw-admin-cleanup'
+					)
+				);
+	
+			}
+	
+		}
+	
+	
+		/*
+		 * 5. Individual useful classes.
+		 */
+		Array.from(
+			element.classList
+		)
+			.filter(isUsefulClass)
+			.forEach(function (className) {
+	
+				addCandidate(
+					'.' + cssEscape(className),
+					'class',
+					__(
+						'CSS class',
+						'igw-admin-cleanup'
+					)
+				);
+	
+			});
+	
+	
+		/*
+		 * 6. Combined class selector.
+		 */
+		const classSelector =
+			generateClassSelector(element);
+	
+		if (classSelector) {
+	
+			addCandidate(
+				classSelector,
+				'classes',
+				__(
+					'Combined CSS classes',
+					'igw-admin-cleanup'
+				)
+			);
+	
+		}
+	
+	
+		/*
+		 * 7. Context selector.
+		 */
+		const contextSelector =
+			generateContextSelector(
+				element
+			);
+	
+		if (contextSelector) {
+	
+			addCandidate(
+				contextSelector,
+				'context',
+				__(
+					'Parent context',
+					'igw-admin-cleanup'
+				)
+			);
+	
+		}
+	
+	
+		/*
+		 * 8. Full path as final fallback.
+		 */
+		const pathSelector =
+			generatePathSelector(
+				element
+			);
+	
+		if (pathSelector) {
+	
+			addCandidate(
+				pathSelector,
+				'path',
+				__(
+					'DOM path',
+					'igw-admin-cleanup'
+				)
+			);
+	
+		}
+	
+	
+		/**
+		 * Sort candidates.
+		 *
+		 * Unique selectors first, then by preferred type.
+		 */
+		const typePriority = {
+			id: 1,
+			data: 2,
+			attribute: 3,
+			classes: 4,
+			class: 5,
+			context: 6,
+			path: 7
+		};
+	
+	
+		candidates.sort(
+			function (a, b) {
+		
+				/*
+				 * Unique selectors first.
+				 */
+				if (
+					a.count === 1 &&
+					b.count !== 1
+				) {
+					return -1;
+				}
+		
+				if (
+					b.count === 1 &&
+					a.count !== 1
+				) {
+					return 1;
+				}
+		
+		
+				/*
+				 * Higher quality first.
+				 */
+				if (
+					a.quality &&
+					b.quality &&
+					a.quality.score !==
+						b.quality.score
+				) {
+		
+					return (
+						b.quality.score -
+						a.quality.score
+					);
+		
+				}
+		
+		
+				/*
+				 * Selector type as fallback.
+				 */
+				return (
+					(typePriority[a.type] || 99) -
+					(typePriority[b.type] || 99)
+				);
+		
+			}
+		);
+	
+	
+		/*
+		 * Keep the list manageable.
+		 */
+		return candidates.slice(0, 5);
+	
+	}
+	
+	/**
+	 * Evaluate selector quality.
+	 *
+	 * This is a heuristic, not a guarantee.
+	 *
+	 * @param {Object} candidate
+	 *
+	 * @return {Object}
+	 */
+	function evaluateSelectorCandidate(candidate) {
+	
+		let score = 50;
+	
+		let status = 'acceptable';
+	
+		const reasons = [];
+	
+		const selector =
+			candidate.selector || '';
+	
+		const type =
+			candidate.type || '';
+	
+		const count =
+			Number(candidate.count || 0);
+	
+	
+		/*
+		 * Match count.
+		 */
+		if (count === 1) {
+	
+			score += 25;
+	
+			reasons.push(
+				__(
+					'Matches a single element',
+					'igw-admin-cleanup'
+				)
+			);
+	
+		} else if (count <= 3) {
+	
+			score += 5;
+	
+			reasons.push(
+				__(
+					'Matches a small number of elements',
+					'igw-admin-cleanup'
+				)
+			);
+	
+		} else if (count <= 5) {
+	
+			score -= 10;
+	
+			reasons.push(
+				__(
+					'Matches multiple elements',
+					'igw-admin-cleanup'
+				)
+			);
+	
+		} else {
+	
+			score -= 30;
+	
+			reasons.push(
+				__(
+					'Selector is too broad',
+					'igw-admin-cleanup'
+				)
+			);
+	
+		}
+	
+	
+		/*
+		 * Selector type.
+		 */
+		switch (type) {
+	
+			case 'id':
+	
+				score += 25;
+	
+				reasons.push(
+					__(
+						'Uses an element ID',
+						'igw-admin-cleanup'
+					)
+				);
+	
+				break;
+	
+	
+			case 'data':
+	
+				score += 15;
+	
+				reasons.push(
+					__(
+						'Uses a data attribute',
+						'igw-admin-cleanup'
+					)
+				);
+	
+				break;
+	
+	
+			case 'attribute':
+	
+				score += 10;
+	
+				reasons.push(
+					__(
+						'Uses a semantic attribute',
+						'igw-admin-cleanup'
+					)
+				);
+	
+				break;
+	
+	
+			case 'classes':
+	
+				score += 5;
+	
+				reasons.push(
+					__(
+						'Uses combined CSS classes',
+						'igw-admin-cleanup'
+					)
+				);
+	
+				break;
+	
+	
+			case 'class':
+	
+				/*
+				 * Neutral.
+				 */
+				reasons.push(
+					__(
+						'Uses a CSS class',
+						'igw-admin-cleanup'
+					)
+				);
+	
+				break;
+	
+	
+			case 'context':
+	
+				score -= 5;
+	
+				reasons.push(
+					__(
+						'Depends on parent context',
+						'igw-admin-cleanup'
+					)
+				);
+	
+				break;
+	
+	
+			case 'path':
+	
+				score -= 25;
+	
+				reasons.push(
+					__(
+						'Depends on DOM structure',
+						'igw-admin-cleanup'
+					)
+				);
+	
+				break;
+	
+		}
+	
+	
+		/*
+		 * Structural selectors.
+		 */
+		if (
+			selector.includes(':nth-child(') ||
+			selector.includes(':nth-of-type(')
+		) {
+	
+			score -= 25;
+	
+			reasons.push(
+				__(
+					'Uses positional selectors',
+					'igw-admin-cleanup'
+				)
+			);
+	
+		}
+	
+	
+		/*
+		 * Very long selectors usually depend on
+		 * too much DOM structure.
+		 */
+		if (selector.length > 150) {
+	
+			score -= 15;
+	
+			reasons.push(
+				__(
+					'Selector is unusually long',
+					'igw-admin-cleanup'
+				)
+			);
+	
+		} else if (selector.length > 90) {
+	
+			score -= 5;
+	
+		}
+	
+	
+		/*
+		 * Detect values that look dynamically generated.
+		 */
+		if (
+			/[a-f0-9]{16,}/i.test(selector)
+		) {
+	
+			score -= 20;
+	
+			reasons.push(
+				__(
+					'Contains a value that may be dynamically generated',
+					'igw-admin-cleanup'
+				)
+			);
+	
+		}
+	
+	
+		/*
+		 * UUID-like values.
+		 */
+		if (
+			/[a-f0-9]{8}-[a-f0-9]{4}-[1-5a-f0-9]{4}-[89ab0-9a-f]{4}-[a-f0-9]{12}/i
+				.test(selector)
+		) {
+	
+			score -= 25;
+	
+			reasons.push(
+				__(
+					'Contains a UUID-like value',
+					'igw-admin-cleanup'
+				)
+			);
+	
+		}
+	
+	
+		/*
+		 * Long numeric values may be IDs, timestamps
+		 * or dynamically generated references.
+		 */
+		if (
+			/\d{8,}/.test(selector)
+		) {
+	
+			score -= 15;
+	
+			reasons.push(
+				__(
+					'Contains a long numeric value',
+					'igw-admin-cleanup'
+				)
+			);
+	
+		}
+	
+	
+		/*
+		 * Limit score.
+		 */
+		score =
+			Math.max(
+				0,
+				Math.min(
+					100,
+					score
+				)
+			);
+	
+	
+		/*
+		 * Human-readable state.
+		 */
+		if (score >= 80) {
+	
+			status = 'good';
+	
+		} else if (score >= 55) {
+	
+			status = 'acceptable';
+	
+		} else {
+	
+			status = 'fragile';
+	
+		}
+	
+	
+		return {
+			score: score,
+			status: status,
+			reasons: reasons
+		};
+	
 	}
 
 
@@ -926,7 +1636,8 @@
 	 */
 	function showResultPanel(
 		element,
-		selector
+		selector,
+		candidates = []
 	) {
 	
 		removeResultPanel();
@@ -951,7 +1662,173 @@
 					.replace(/\s+/g, ' ')
 					.substring(0, 120)
 				: '';
-
+		
+		
+		
+		let candidatesHtml = '';
+		
+		if (candidates.length) {
+			
+			
+		
+			candidatesHtml = `
+				<div class="igw-selector-result__field">
+		
+					<span class="igw-selector-result__label">
+						${escapeHtml(
+							__(
+								'Suggested alternatives',
+								'igw-admin-cleanup'
+							)
+						)}
+					</span>
+		
+					<div class="igw-selector-candidates">
+		
+						${candidates
+							.map(function (candidate) {
+								
+								const quality =
+									candidate.quality || {
+										score: 0,
+										status: 'acceptable',
+										reasons: []
+									};
+								
+								
+								let qualityLabel = '';
+								
+								switch (quality.status) {
+								
+									case 'good':
+								
+										qualityLabel =
+											__(
+												'Good option',
+												'igw-admin-cleanup'
+											);
+								
+										break;
+								
+								
+									case 'fragile':
+								
+										qualityLabel =
+											__(
+												'Fragile',
+												'igw-admin-cleanup'
+											);
+								
+										break;
+								
+								
+									default:
+								
+										qualityLabel =
+											__(
+												'Acceptable',
+												'igw-admin-cleanup'
+											);
+								
+										break;
+								
+								}
+		
+								let statusClass =
+									'multiple';
+		
+								if (candidate.count === 1) {
+		
+									statusClass =
+										'precise';
+		
+								} else if (
+									candidate.count > 5
+								) {
+		
+									statusClass =
+										'broad';
+		
+								}
+		
+		
+								const matchText =
+									candidate.count === 1
+										? __(
+											'1 matching element',
+											'igw-admin-cleanup'
+										)
+										: sprintf(
+											__(
+												'%d matching elements',
+												'igw-admin-cleanup'
+											),
+											candidate.count
+										);
+								const qualityTitle =
+								quality.reasons.join(' · ');
+		
+								return `
+									<button
+										type="button"
+										class="igw-selector-candidate"
+										data-selector="${escapeHtmlAttribute(
+											candidate.selector
+										)}"
+										title="${escapeHtmlAttribute(
+											qualityTitle
+										)}"
+									>
+		
+										<span
+											class="igw-selector-candidate__selector"
+										>
+											${escapeHtml(
+												candidate.selector
+											)}
+										</span>
+		
+										<span
+											class="igw-selector-candidate__meta"
+										>
+		
+											<span>
+												${escapeHtml(
+													candidate.label
+												)}
+											</span>
+		
+											<span
+												class="igw-selector-candidate__status
+												igw-selector-candidate__status--${statusClass}"
+											>
+												${escapeHtml(
+													matchText
+												)}
+											</span>
+											<span
+												class="igw-selector-candidate__quality
+												igw-selector-candidate__quality--${quality.status}"
+											>
+												${escapeHtml(
+													qualityLabel
+												)}
+											</span>
+		
+										</span>
+		
+									</button>
+								`;
+		
+							})
+							.join('')}
+		
+					</div>
+		
+				</div>
+			`;
+		
+		}
 
 		resultPanel.innerHTML = `
 			<div class="igw-selector-result__header">
@@ -1025,6 +1902,7 @@
 						class="regular-text code"
 						value="${escapeHtmlAttribute(selector)}"
 					>
+					${candidatesHtml}
 					<div
 						class="igw-selector-result__matches"
 					>
@@ -1032,8 +1910,67 @@
 
 				</div>
 				
+				<div class="igw-selector-result__field">
+				
+					<label
+						class="igw-selector-result__label"
+						for="igw-selector-result-action"
+					>
+						${escapeHtml(
+							__(
+								'Action',
+								'igw-admin-cleanup'
+							)
+						)}
+					</label>
+				
+					<select
+						id="igw-selector-result-action"
+						class="widefat"
+					>
+				
+						<option value="element">
+							${escapeHtml(
+								__(
+									'Hide selected element',
+									'igw-admin-cleanup'
+								)
+							)}
+						</option>
+				
+						<option value="parent">
+							${escapeHtml(
+								__(
+									'Hide direct parent',
+									'igw-admin-cleanup'
+								)
+							)}
+						</option>
+				
+						<option value="closest_li">
+							${escapeHtml(
+								__(
+									'Hide closest <li>',
+									'igw-admin-cleanup'
+								)
+							)}
+						</option>
+				
+						<option value="remove">
+							${escapeHtml(
+								__(
+									'Remove element',
+									'igw-admin-cleanup'
+								)
+							)}
+						</option>
+				
+					</select>
+				
+				</div>
 
 			</div>
+			
 
 			<div class="igw-selector-result__footer">
 			
@@ -1094,6 +2031,110 @@
 			resultPanel
 		);
 		
+		const candidateButtons =
+		resultPanel.querySelectorAll(
+			'.igw-selector-candidate'
+		);
+		
+		candidateButtons.forEach(
+			function (button) {
+		
+				button.addEventListener(
+					'click',
+					function () {
+		
+						const candidateSelector =
+							button.dataset.selector;
+		
+						if (!candidateSelector) {
+							return;
+						}
+		
+		
+						const input =
+							resultPanel.querySelector(
+								'#igw-selector-result-value'
+							);
+		
+						if (!input) {
+							return;
+						}
+		
+		
+						/*
+						 * Restore any active preview.
+						 */
+						restorePreview();
+		
+		
+						/*
+						 * Apply candidate.
+						 */
+						input.value =
+							candidateSelector;
+		
+		
+						/*
+						 * Recalculate matches.
+						 */
+						updateMatchStatus(
+							candidateSelector
+						);
+		
+		
+						/*
+						 * Reset preview controls.
+						 */
+						if (previewButton) {
+							previewButton.hidden = false;
+						}
+		
+						if (restoreButton) {
+							restoreButton.hidden = true;
+						}
+		
+		
+						/*
+						 * Update visual selected state.
+						 */
+						candidateButtons.forEach(
+							function (candidateButton) {
+		
+								candidateButton.classList.remove(
+									'is-selected'
+								);
+		
+							}
+						);
+		
+		
+						button.classList.add(
+							'is-selected'
+						);
+		
+					}
+				);
+		
+			}
+		);
+		
+		candidateButtons.forEach(
+			function (button) {
+		
+				if (
+					button.dataset.selector ===
+					selector
+				) {
+		
+					button.classList.add(
+						'is-selected'
+					);
+		
+				}
+		
+			}
+		);
+		
 		/*
 		 * Show initial selector match information.
 		 */
@@ -1129,6 +2170,11 @@
 			resultPanel.querySelector(
 				'.igw-selector-result__restore'
 			);
+			
+		const actionSelect =
+		resultPanel.querySelector(
+			'#igw-selector-result-action'
+		);
 
 		if (closeButton) {
 
@@ -1175,8 +2221,15 @@
 					}
 		
 		
+					const action =
+						actionSelect
+							? actionSelect.value
+							: 'element';
+					
+					
 					previewSelector(
-						input.value.trim()
+						input.value.trim(),
+						action
 					);
 		
 		
@@ -1241,6 +2294,29 @@
 					updateMatchStatus(
 						selectorInput.value.trim()
 					);
+		
+				}
+			);
+		
+		}
+		
+		if (actionSelect) {
+		
+			actionSelect.addEventListener(
+				'change',
+				function () {
+		
+					restorePreview();
+		
+		
+					if (previewButton) {
+						previewButton.hidden = false;
+					}
+		
+		
+					if (restoreButton) {
+						restoreButton.hidden = true;
+					}
 		
 				}
 			);
@@ -1359,7 +2435,7 @@
 	/**
 	 * Use selected selector.
 	 *
-	 * If we are already on the IGW Admin Cleaner page,
+	 * If we are already on the IGW Admin Cleanup page,
 	 * open the rule form directly.
 	 *
 	 * Otherwise redirect to the plugin page with the
@@ -1372,6 +2448,9 @@
 		}
 	
 	
+		/*
+		 * Selected CSS selector.
+		 */
 		const selectedSelector =
 			resultPanel.querySelector(
 				'#igw-selector-result-value'
@@ -1392,6 +2471,25 @@
 		}
 	
 	
+		/*
+		 * Selected cleanup action.
+		 */
+		const actionSelect =
+			resultPanel.querySelector(
+				'#igw-selector-result-action'
+			);
+	
+	
+		const selectedAction =
+			actionSelect
+				? actionSelect.value
+				: 'element';
+	
+	
+		/*
+		 * Check whether we are already on
+		 * the IGW Admin Cleanup page.
+		 */
 		const ruleForm =
 			document.getElementById(
 				'igw-admin-cleaner-rule-form'
@@ -1402,11 +2500,16 @@
 			document.getElementById(
 				'igw_rule_selector'
 			);
-		
-		
+	
+	
+		const actionInput =
+			document.getElementById(
+				'igw_rule_action'
+			);
+	
 	
 		/*
-		 * We are already on the IGW Admin Cleaner page.
+		 * We are already on the plugin page.
 		 */
 		if (
 			ruleForm &&
@@ -1416,18 +2519,31 @@
 			selectorInput.value =
 				selector;
 	
+	
+			if (actionInput) {
+	
+				actionInput.value =
+					selectedAction;
+	
+			}
+	
+	
 			ruleForm.classList.add(
 				'is-open'
 			);
 	
+	
 			removeResultPanel();
 	
+	
 			selectorInput.focus();
+	
 	
 			ruleForm.scrollIntoView({
 				behavior: 'smooth',
 				block: 'start'
 			});
+	
 	
 			return;
 		}
@@ -1449,23 +2565,43 @@
 				IGWAdminCleanerSelector.adminUrl,
 				window.location.origin
 			);
-		
-		
 	
 	
+		/*
+		 * Pass selector.
+		 */
 		url.searchParams.set(
 			'igw_selector',
 			selector
 		);
-		
+	
+	
+		/*
+		 * Pass selected element text as proposed rule name.
+		 */
 		if (selectedElementText) {
-		
+	
 			url.searchParams.set(
 				'igw_name',
 				selectedElementText
 			);
-		
+	
 		}
+	
+	
+		/*
+		 * Pass selected action.
+		 */
+		url.searchParams.set(
+			'igw_action',
+			selectedAction
+		);
+	
+	
+		/*
+		 * Restore any active preview before leaving.
+		 */
+		restorePreview();
 	
 	
 		window.location.href =
@@ -1524,11 +2660,27 @@
 
 	}
 	
-	function previewSelector(selector) {
+	/**
+	 * Preview selector effect using the selected action.
+	 *
+	 * @param {string} selector
+	 * @param {string} action
+	 */
+	function previewSelector(
+		selector,
+		action
+	) {
 	
 		restorePreview();
 	
+	
+		if (!selector) {
+			return;
+		}
+	
+	
 		let elements;
+	
 	
 		try {
 	
@@ -1544,19 +2696,83 @@
 		}
 	
 	
+		const previewTargets = [];
+	
+	
 		elements.forEach(function (element) {
 	
+			let target = element;
+	
+	
+			switch (action) {
+	
+				case 'parent':
+	
+					if (element.parentElement) {
+						target =
+							element.parentElement;
+					}
+	
+					break;
+	
+	
+				case 'closest_li':
+	
+					const listItem =
+						element.closest('li');
+	
+					if (listItem) {
+						target = listItem;
+					}
+	
+					break;
+	
+	
+				case 'remove':
+	
+					/*
+					 * Preview only.
+					 * We simulate removal using display:none
+					 * so the DOM can be safely restored.
+					 */
+					target = element;
+	
+					break;
+	
+	
+				case 'element':
+				default:
+	
+					target = element;
+	
+					break;
+	
+			}
+	
+	
+			if (
+				!target ||
+				previewTargets.includes(target)
+			) {
+				return;
+			}
+	
+	
+			previewTargets.push(target);
+	
+	
 			previewElements.push({
-				element: element,
-				display: element.style.display,
+				element: target,
+				display:
+					target.style.display,
 				priority:
-					element.style.getPropertyPriority(
+					target.style.getPropertyPriority(
 						'display'
 					)
 			});
 	
 	
-			element.style.setProperty(
+			target.style.setProperty(
 				'display',
 				'none',
 				'important'
