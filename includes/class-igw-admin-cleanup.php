@@ -49,6 +49,8 @@ class IGW_Admin_Cleanup
 			'admin_enqueue_scripts',
 			[$this, 'enqueue_selector_assets']
 		);
+		
+		
 	}
 
 

@@ -2,9 +2,9 @@
 Contributors: crishnakh
 Tags: admin, dashboard, cleanup, css, hide
 Requires at least: 6.0
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.3.3
+Stable tag: 0.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -165,6 +165,19 @@ A recently checked rule that has not been detected does not necessarily mean the
 
 == Changelog ==
 
+= 0.4.0 =
+* Added a new Rule Library with ready-to-use cleanup rules for supported WordPress plugins.
+* Added automatic detection of installed plugins to show only relevant library rules by default.
+* Added an option to browse the complete Rule Library, including rules for plugins not installed on the site.
+* Added individual and multiple rule installation from the Rule Library.
+* Library rules for plugins that are not installed can be browsed but cannot be added.
+* Added indicators for active, inactive and not installed plugins.
+* Added detection of library rules already added to the user's cleanup rules.
+* Added library IDs to imported rules to keep track of their origin.
+* Organized library rules into separate files per plugin for easier maintenance and future expansion.
+* Added the first set of verified cleanup rules for supported plugins.
+* Improved and compacted the Rule Library interface.
+
 = 0.3.3 =
 * Added multiple selector suggestions to the assisted element selector.
 * Added support for generating selector candidates from IDs, CSS classes, data attributes and other useful HTML attributes.
@@ -221,6 +234,9 @@ A recently checked rule that has not been detected does not necessarily mean the
 * Added automatic hiding of the closest list item when applicable.
 
 == Upgrade Notice ==
+
+= 0.4.0 =
+Introduces the new Rule Library, making it easy to find and add ready-to-use cleanup rules for supported plugins installed on your site.
 
 = 0.3.3 =
 Adds smarter selector suggestions, quality indicators and cleanup action previews to make assisted rule creation more precise and reliable.

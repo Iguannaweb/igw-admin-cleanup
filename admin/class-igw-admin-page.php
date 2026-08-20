@@ -48,7 +48,15 @@ class IGW_Admin_Cleaner_Admin_Page
 			[$this, 'enqueue_assets']
 		);
 		
+		add_action(
+			'admin_post_igw_admin_cleaner_install_library_rule',
+			[$this, 'handle_install_library_rule']
+		);
 		
+		add_action(
+			'admin_post_igw_admin_cleaner_install_library_rules',
+			[$this, 'handle_install_library_rules']
+		);
 	}
 
 
@@ -81,6 +89,23 @@ class IGW_Admin_Cleaner_Admin_Page
 		}
 
 		$rules = IGW_Admin_Cleaner_Rules::get_all();
+		
+		$current_tab = isset($_GET['tab'])
+			? sanitize_key(
+				wp_unslash($_GET['tab'])
+			)
+			: 'rules';
+		
+		
+		$allowed_tabs = [
+			'rules',
+			'library',
+		];
+		
+		
+		if (!in_array($current_tab, $allowed_tabs, true)) {
+			$current_tab = 'rules';
+		}
 
 		$editing_rule = null;
 
@@ -123,6 +148,53 @@ class IGW_Admin_Cleaner_Admin_Page
 		?>
 		<div class="wrap igw-admin-cleaner-wrap">
 		
+		
+		<nav class="nav-tab-wrapper igw-admin-cleaner-tabs">
+		
+			<a
+				href="<?php echo esc_url(
+					add_query_arg(
+						[
+							'page' => self::MENU_SLUG,
+							'tab'  => 'rules',
+						],
+						admin_url('options-general.php')
+					)
+				); ?>"
+				class="nav-tab <?php echo $current_tab === 'rules'
+					? 'nav-tab-active'
+					: ''; ?>"
+			>
+				<?php esc_html_e(
+					'Cleanup rules',
+					'igw-admin-cleanup'
+				); ?>
+			</a>
+		
+		
+			<a
+				href="<?php echo esc_url(
+					add_query_arg(
+						[
+							'page' => self::MENU_SLUG,
+							'tab'  => 'library',
+						],
+						admin_url('options-general.php')
+					)
+				); ?>"
+				class="nav-tab <?php echo $current_tab === 'library'
+					? 'nav-tab-active'
+					: ''; ?>"
+			>
+				<?php esc_html_e(
+					'Rule library',
+					'igw-admin-cleanup'
+				); ?>
+			</a>
+		
+		</nav>
+		
+		<?php if ($current_tab === 'rules') : ?>
 		<div class="igw-admin-cleaner-header">
 			
 			<div class="igw-admin-cleaner-header__content">
@@ -140,6 +212,8 @@ class IGW_Admin_Cleaner_Admin_Page
 						'igw-admin-cleanup'
 					); ?>
 				</p>
+				
+				
 				<?php
 					$total_rules = count($rules);
 					
@@ -499,6 +573,12 @@ class IGW_Admin_Cleaner_Admin_Page
 			</div>
 
 		</div>
+		<?php endif; ?>
+		<?php if ($current_tab === 'library') : ?>
+		
+			<?php $this->render_library(); ?>
+		
+		<?php endif; ?>
 		<?php
 	}
 
@@ -1207,6 +1287,14 @@ class IGW_Admin_Cleaner_Admin_Page
 				'Rule status updated.',
 				'igw-admin-cleanup'
 			),
+			'library_added' => __(
+				'The library rule was added successfully.',
+				'igw-admin-cleanup'
+			),
+			'library_multiple_added' => __(
+				'The selected library rules were added successfully.',
+				'igw-admin-cleanup'
+			),
 		];
 
 		if (!isset($messages[$message])) {
@@ -1508,5 +1596,681 @@ class IGW_Admin_Cleaner_Admin_Page
 		</div>
 	
 		<?php
+	}
+	
+	/**
+	 * Render rule library.
+	 *
+	 * @return void
+	 */
+	private function render_library()
+	{
+		$library_view = isset($_GET['view'])
+			? sanitize_key(
+				wp_unslash($_GET['view'])
+			)
+			: 'installed';
+		
+		if (!in_array($library_view, ['installed', 'all'], true)) {
+			$library_view = 'installed';
+		}
+		
+		$groups =
+			IGW_Admin_Cleaner_Library::get_grouped_by_plugin();
+	
+		if (empty($groups)) {
+	
+			?>
+			<div class="igw-admin-cleaner-panel">
+	
+				<div class="igw-admin-cleaner-panel__body">
+	
+					<div class="igw-admin-cleaner-empty">
+	
+						<h3>
+							<?php esc_html_e(
+								'No library rules available',
+								'igw-admin-cleanup'
+							); ?>
+						</h3>
+	
+						<p>
+							<?php esc_html_e(
+								'The cleanup rule library is currently empty.',
+								'igw-admin-cleanup'
+							); ?>
+						</p>
+	
+					</div>
+	
+				</div>
+	
+			</div>
+			<?php
+	
+			return;
+		}
+	
+	
+		/*
+		 * show installed or all plugins.
+		 */
+		$visible_groups = [];
+		
+		foreach ($groups as $plugin_file => $group) {
+		
+			if (
+				$library_view === 'installed' &&
+				!IGW_Admin_Cleaner_Library::is_plugin_installed(
+					$plugin_file
+				)
+			) {
+				continue;
+			}
+		
+			$visible_groups[$plugin_file] =
+				$group;
+		}
+	
+	
+		?>
+	
+		<div class="igw-admin-cleaner-library-header">
+	
+			<div>
+	
+				<h2>
+					<?php esc_html_e(
+						'Rule library',
+						'igw-admin-cleanup'
+					); ?>
+				</h2>
+	
+				<p>
+					<?php
+				
+					if ($library_view === 'all') {
+				
+						esc_html_e(
+							'Browse all cleanup rules currently available in the IGW Admin Cleanup library.',
+							'igw-admin-cleanup'
+						);
+				
+					} else {
+				
+						esc_html_e(
+							'Ready-to-use cleanup rules for plugins installed on this site.',
+							'igw-admin-cleanup'
+						);
+				
+					}
+				
+					?>
+				</p>
+	
+			</div>
+	
+		</div>
+		
+		<div class="igw-library-view-switch">
+		
+			<a
+				href="<?php echo esc_url(
+					add_query_arg(
+						[
+							'page' => self::MENU_SLUG,
+							'tab'  => 'library',
+							'view' => 'installed',
+						],
+						admin_url('options-general.php')
+					)
+				); ?>"
+				class="button <?php echo $library_view === 'installed'
+					? 'button-primary'
+					: ''; ?>"
+			>
+				<?php esc_html_e(
+					'Installed plugins',
+					'igw-admin-cleanup'
+				); ?>
+			</a>
+		
+		
+			<a
+				href="<?php echo esc_url(
+					add_query_arg(
+						[
+							'page' => self::MENU_SLUG,
+							'tab'  => 'library',
+							'view' => 'all',
+						],
+						admin_url('options-general.php')
+					)
+				); ?>"
+				class="button <?php echo $library_view === 'all'
+					? 'button-primary'
+					: ''; ?>"
+			>
+				<?php esc_html_e(
+					'All library',
+					'igw-admin-cleanup'
+				); ?>
+			</a>
+		
+		</div>
+	
+	
+		<?php if (empty($visible_groups)) : ?>
+	
+			<div class="igw-admin-cleaner-panel">
+	
+				<div class="igw-admin-cleaner-panel__body">
+	
+					<div class="igw-admin-cleaner-empty">
+	
+						<h3>
+							<?php esc_html_e(
+								'No matching plugins found',
+								'igw-admin-cleanup'
+							); ?>
+						</h3>
+	
+						<p>
+							<?php esc_html_e(
+								'None of the plugins installed on this site currently have rules in the IGW Admin Cleanup library.',
+								'igw-admin-cleanup'
+							); ?>
+						</p>
+	
+					</div>
+	
+				</div>
+	
+			</div>
+	
+		<?php else : ?>
+	
+	
+			<div class="igw-library-grid">
+	
+				<?php
+				foreach (
+					$visible_groups
+					as $plugin_file => $group
+				) :
+				?>
+	
+					<?php
+	
+					$plugin_active =
+						IGW_Admin_Cleaner_Library::is_plugin_active(
+							$plugin_file
+						);
+						
+					$plugin_installed =
+					IGW_Admin_Cleaner_Library::is_plugin_installed(
+						$plugin_file
+					);
+	
+					?>
+	
+					<div class="igw-library-plugin">
+	
+						<div class="igw-library-plugin__header">
+	
+							<div>
+	
+								<h3>
+									<?php
+									echo esc_html(
+										$group['plugin_name']
+									);
+									?>
+								</h3>
+	
+								<span
+									class="igw-library-plugin__status <?php echo $plugin_active
+										? 'is-active'
+										: 'is-inactive'; ?>"
+								>
+									<?php
+	
+									if (!$plugin_installed) {
+									
+										esc_html_e(
+											'Plugin not installed',
+											'igw-admin-cleanup'
+										);
+									
+									} elseif ($plugin_active) {
+									
+										esc_html_e(
+											'Active plugin',
+											'igw-admin-cleanup'
+										);
+									
+									} else {
+									
+										esc_html_e(
+											'Installed but inactive',
+											'igw-admin-cleanup'
+										);
+									
+									}
+									?>
+								</span>
+	
+							</div>
+	
+							<span class="igw-library-plugin__count">
+	
+								<?php
+								printf(
+									esc_html(
+										_n(
+											'%d rule',
+											'%d rules',
+											count($group['rules']),
+											'igw-admin-cleanup'
+										)
+									),
+									count($group['rules'])
+								);
+								?>
+	
+							</span>
+	
+						</div>
+	
+						<form
+							method="post"
+							action="<?php echo esc_url(
+								admin_url('admin-post.php')
+							); ?>"
+							class="igw-library-plugin-form"
+						>
+						
+							<input
+								type="hidden"
+								name="action"
+								value="igw_admin_cleaner_install_library_rules"
+							>
+						
+							<?php
+							wp_nonce_field(
+								'igw_admin_cleaner_install_library_rules',
+								'igw_library_nonce'
+							);
+							?>
+						<div class="igw-library-rules">
+	
+							<?php
+							foreach (
+								$group['rules']
+								as $library_rule
+							) :
+							?>
+	
+								<?php
+	
+								$library_id =
+									$library_rule['id'] ?? '';
+	
+								$installed =
+									IGW_Admin_Cleaner_Library::is_rule_installed(
+										$library_id
+									);
+	
+								?>
+	
+								<div class="igw-library-rule">
+									
+									<?php if (!$installed) : ?>
+									
+										<div class="igw-library-rule__check">
+									
+											<input
+												type="checkbox"
+												class="igw-library-rule-checkbox"
+												name="library_ids[]"
+												value="<?php echo esc_attr($library_id); ?>"
+											>
+									
+										</div>
+									
+									<?php endif; ?>
+	
+									<div class="igw-library-rule__content">
+	
+										<strong
+											class="igw-library-rule__name"
+										>
+											<?php
+											echo esc_html(
+												$library_rule['name']
+												?? ''
+											);
+											?>
+										</strong>
+	
+	
+										<?php
+										if (
+											!empty(
+												$library_rule['description']
+											)
+										) :
+										?>
+	
+											<p>
+												<?php
+												echo esc_html(
+													$library_rule['description']
+												);
+												?>
+											</p>
+	
+										<?php endif; ?>
+	
+	
+										<code
+											class="igw-library-rule__selector"
+											title="<?php echo esc_attr(
+												$library_rule['selector']
+												?? ''
+											); ?>"
+										>
+											<?php
+											echo esc_html(
+												$library_rule['selector']
+												?? ''
+											);
+											?>
+										</code>
+	
+	
+										<div class="igw-library-rule__meta">
+	
+											<span>
+												<?php
+												echo esc_html(
+													$this->get_action_label(
+														$library_rule['action']
+														?? ''
+													)
+												);
+												?>
+											</span>
+	
+											<?php
+											if (
+												!empty(
+													$library_rule['category']
+												)
+											) :
+											?>
+	
+												<span>
+													<?php
+													echo esc_html(
+														ucfirst(
+															$library_rule['category']
+														)
+													);
+													?>
+												</span>
+	
+											<?php endif; ?>
+	
+										</div>
+	
+									</div>
+	
+	
+									<div class="igw-library-rule__action">
+	
+										<?php if (!$plugin_installed) : ?>
+										
+											<span class="igw-library-rule__unavailable">
+												<?php esc_html_e(
+													'Plugin not installed',
+													'igw-admin-cleanup'
+												); ?>
+											</span>
+										
+										<?php elseif ($installed) : ?>
+										
+											<span class="igw-library-rule__installed">
+												✓
+												<?php esc_html_e(
+													'Added',
+													'igw-admin-cleanup'
+												); ?>
+											</span>
+										
+										<?php else : ?>
+	
+											<a
+												class="button button-primary"
+												href="<?php echo esc_url(
+													wp_nonce_url(
+														add_query_arg(
+															[
+																'action'     => 'igw_admin_cleaner_install_library_rule',
+																'library_id' => $library_id,
+															],
+															admin_url(
+																'admin-post.php'
+															)
+														),
+														'igw_admin_cleaner_install_library_rule'
+													)
+												); ?>"
+											>
+												<?php esc_html_e(
+													'Add rule',
+													'igw-admin-cleanup'
+												); ?>
+											</a>
+	
+										<?php endif; ?>
+	
+									</div>
+	
+								</div>
+	
+							<?php endforeach; ?>
+	
+						</div> <!-- .igw-library-rules -->
+						
+						<div class="igw-library-plugin__footer">
+						
+							<button
+								type="submit"
+								class="button button-primary igw-library-add-selected"
+								disabled
+							>
+								<?php esc_html_e(
+									'Add selected rules',
+									'igw-admin-cleanup'
+								); ?>
+							</button>
+						
+						</div>
+						
+						</form>
+						
+	
+					</div>
+	
+				<?php endforeach; ?>
+	
+			</div>
+	
+		<?php endif;
+	}
+	
+	/**
+	 * Install a rule from the library.
+	 *
+	 * @return void
+	 */
+	public function handle_install_library_rule()
+	{
+		if (!current_user_can('manage_options')) {
+	
+			wp_die(
+				esc_html__(
+					'You do not have permission to perform this action.',
+					'igw-admin-cleanup'
+				)
+			);
+		}
+	
+	
+		check_admin_referer(
+			'igw_admin_cleaner_install_library_rule'
+		);
+	
+	
+		$library_id =
+			isset($_GET['library_id'])
+				? sanitize_key(
+					wp_unslash(
+						$_GET['library_id']
+					)
+				)
+				: '';
+	
+	
+		if (!$library_id) {
+	
+			$this->redirect_library(
+				'error'
+			);
+		}
+	
+	
+		$result =
+			IGW_Admin_Cleaner_Library::install_rule(
+				$library_id
+			);
+	
+	
+		if (is_wp_error($result)) {
+	
+			$this->redirect_library(
+				'error'
+			);
+		}
+	
+	
+		$this->redirect_library(
+			'library_added'
+		);
+	}
+	
+	/**
+	 * Redirect to library tab.
+	 *
+	 * @param string $message Message code.
+	 * @return void
+	 */
+	private function redirect_library($message)
+	{
+		wp_safe_redirect(
+			add_query_arg(
+				[
+					'page'        => self::MENU_SLUG,
+					'tab'         => 'library',
+					'igw_message' => sanitize_key($message),
+				],
+				admin_url(
+					'options-general.php'
+				)
+			)
+		);
+	
+		exit;
+	}
+	
+	/**
+	 * Install multiple rules from the library.
+	 *
+	 * @return void
+	 */
+	public function handle_install_library_rules()
+	{
+		if (!current_user_can('manage_options')) {
+	
+			wp_die(
+				esc_html__(
+					'You do not have permission to perform this action.',
+					'igw-admin-cleanup'
+				)
+			);
+		}
+	
+	
+		check_admin_referer(
+			'igw_admin_cleaner_install_library_rules',
+			'igw_library_nonce'
+		);
+	
+	
+		$library_ids =
+			isset($_POST['library_ids'])
+				? (array) $_POST['library_ids']
+				: [];
+	
+	
+		$library_ids =
+			array_filter(
+				array_map(
+					'sanitize_key',
+					array_map(
+						'wp_unslash',
+						$library_ids
+					)
+				)
+			);
+	
+	
+		if (empty($library_ids)) {
+	
+			$this->redirect_library(
+				'error'
+			);
+		}
+	
+	
+		$added = 0;
+	
+	
+		foreach ($library_ids as $library_id) {
+	
+			$result =
+				IGW_Admin_Cleaner_Library::install_rule(
+					$library_id
+				);
+	
+	
+			if (!is_wp_error($result)) {
+				$added++;
+			}
+		}
+	
+	
+		if (!$added) {
+	
+			$this->redirect_library(
+				'error'
+			);
+		}
+	
+	
+		$this->redirect_library(
+			'library_multiple_added'
+		);
 	}
 }

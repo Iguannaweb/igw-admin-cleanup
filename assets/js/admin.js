@@ -173,6 +173,8 @@
 			}
 
 		}
+		
+		
 
 
 		/*
@@ -248,7 +250,64 @@
 		}
 
 	}
-
+	
+	function initLibrarySelection() {
+	
+		const forms =
+			document.querySelectorAll(
+				'.igw-library-plugin-form'
+			);
+	
+	
+		forms.forEach(function (form) {
+	
+			const checkboxes =
+				form.querySelectorAll(
+					'.igw-library-rule-checkbox'
+				);
+	
+			const button =
+				form.querySelector(
+					'.igw-library-add-selected'
+				);
+	
+	
+			if (!checkboxes.length || !button) {
+				return;
+			}
+	
+	
+			function updateButton() {
+	
+				const selected =
+					form.querySelectorAll(
+						'.igw-library-rule-checkbox:checked'
+					).length;
+	
+	
+				button.disabled =
+					selected === 0;
+	
+			}
+	
+	
+			checkboxes.forEach(
+				function (checkbox) {
+	
+					checkbox.addEventListener(
+						'change',
+						updateButton
+					);
+	
+				}
+			);
+	
+	
+			updateButton();
+	
+		});
+	
+	}
 
 	/**
 	 * Initialize admin interface.
@@ -257,6 +316,7 @@
 
 		initRuleForm();
 		initRuleFilters();
+		initLibrarySelection();
 
 	}
 

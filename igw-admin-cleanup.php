@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name:       IGW Admin Cleaner
- * Plugin URI:        https://iguannaweb.com/
+ * Plugin Name:       IGW Admin Cleanup
+ * Plugin URI:        https://wordpress.org/plugins/igw-admin-cleanup
  * Description:       Hide unnecessary elements from the WordPress admin panel using configurable cleanup rules.
- * Version:           0.3.3
+ * Version:           0.4.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Francisco Gálvez
@@ -18,11 +18,10 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-
 /**
  * Plugin constants.
  */
-define('IGW_ADMIN_CLEANER_VERSION', '0.3.3');
+define('IGW_ADMIN_CLEANER_VERSION', '0.4.0');
 define('IGW_ADMIN_CLEANER_DB_VERSION', '2');
 
 define('IGW_ADMIN_CLEANER_FILE', __FILE__);
@@ -35,6 +34,7 @@ define('IGW_ADMIN_CLEANER_BASENAME', plugin_basename(__FILE__));
  * Load required classes.
  */
 require_once IGW_ADMIN_CLEANER_PATH . 'includes/class-igw-rules.php';
+require_once IGW_ADMIN_CLEANER_PATH . 'includes/class-igw-library.php';
 require_once IGW_ADMIN_CLEANER_PATH . 'includes/class-igw-migrations.php';
 require_once IGW_ADMIN_CLEANER_PATH . 'includes/class-igw-admin-cleanup.php';
 
