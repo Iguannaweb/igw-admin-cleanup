@@ -173,7 +173,7 @@ class IGW_Admin_Cleanup
 			'IGWAdminCleanerSelector',
 			[
 				'adminUrl' => admin_url(
-					'options-general.php?page=igw-admin-cleaner'
+					'admin.php?page=igw-admin-cleaner'
 				),
 			]
 		);
@@ -390,9 +390,12 @@ class IGW_Admin_Cleanup
 	
 		$wp_admin_bar->add_node([
 			'id'    => 'igw-admin-cleaner',
-			'title' => __('IGW Admin Cleanup', 'igw-admin-cleaner'),
+			'title' => sprintf(
+				'<span class="ab-icon dashicons dashicons-filter" aria-hidden="true"></span><span class="screen-reader-text">%s</span>',
+				esc_html__('IGW Admin Cleanup', 'igw-admin-cleaner')
+			),
 			'href'  => admin_url(
-				'options-general.php?page=igw-admin-cleaner'
+				'admin.php?page=igw-admin-cleaner'
 			),
 		]);
 	

@@ -61,18 +61,20 @@ class IGW_Admin_Cleaner_Admin_Page
 
 
 	/**
-	 * Register plugin settings page.
+	 * Register the plugin as a top-level admin page.
 	 *
 	 * @return void
 	 */
 	public function register_menu()
 	{
-		add_options_page(
+		add_menu_page(
 			__('IGW Admin Cleanup', 'igw-admin-cleaner'),
 			__('IGW Admin Cleanup', 'igw-admin-cleaner'),
 			'manage_options',
 			self::MENU_SLUG,
-			[$this, 'render_page']
+			[$this, 'render_page'],
+			'dashicons-filter',
+			80
 		);
 	}
 
@@ -158,7 +160,7 @@ class IGW_Admin_Cleaner_Admin_Page
 							'page' => self::MENU_SLUG,
 							'tab'  => 'rules',
 						],
-						admin_url('options-general.php')
+						admin_url('admin.php')
 					)
 				); ?>"
 				class="nav-tab <?php echo $current_tab === 'rules'
@@ -179,7 +181,7 @@ class IGW_Admin_Cleaner_Admin_Page
 							'page' => self::MENU_SLUG,
 							'tab'  => 'library',
 						],
-						admin_url('options-general.php')
+						admin_url('admin.php')
 					)
 				); ?>"
 				class="nav-tab <?php echo $current_tab === 'library'
@@ -834,7 +836,7 @@ class IGW_Admin_Cleaner_Admin_Page
 				<a
 					href="<?php echo esc_url(
 						admin_url(
-							'options-general.php?page=' . self::MENU_SLUG
+							'admin.php?page=' . self::MENU_SLUG
 						)
 					); ?>"
 					class="button"
@@ -1013,7 +1015,7 @@ class IGW_Admin_Cleaner_Admin_Page
 											'action' => 'edit',
 											'rule'   => $rule_id,
 										],
-										admin_url('options-general.php')
+										admin_url('admin.php')
 									)
 								); ?>"
 								class="button button-small igw-action-button"
@@ -1332,7 +1334,7 @@ class IGW_Admin_Cleaner_Admin_Page
 		wp_safe_redirect(
 			add_query_arg(
 				$args,
-				admin_url('options-general.php')
+				admin_url('admin.php')
 			)
 		);
 
@@ -1409,7 +1411,7 @@ class IGW_Admin_Cleaner_Admin_Page
 	 */
 	public function enqueue_assets($hook_suffix)
 	{
-		if ($hook_suffix !== 'settings_page_' . self::MENU_SLUG) {
+		if ($hook_suffix !== 'toplevel_page_' . self::MENU_SLUG) {
 			return;
 		}
 	
@@ -1722,7 +1724,7 @@ class IGW_Admin_Cleaner_Admin_Page
 							'tab'  => 'library',
 							'view' => 'installed',
 						],
-						admin_url('options-general.php')
+						admin_url('admin.php')
 					)
 				); ?>"
 				class="button <?php echo $library_view === 'installed'
@@ -1744,7 +1746,7 @@ class IGW_Admin_Cleaner_Admin_Page
 							'tab'  => 'library',
 							'view' => 'all',
 						],
-						admin_url('options-general.php')
+						admin_url('admin.php')
 					)
 				); ?>"
 				class="button <?php echo $library_view === 'all'
@@ -2186,7 +2188,7 @@ class IGW_Admin_Cleaner_Admin_Page
 					'igw_message' => sanitize_key($message),
 				],
 				admin_url(
-					'options-general.php'
+					'admin.php'
 				)
 			)
 		);

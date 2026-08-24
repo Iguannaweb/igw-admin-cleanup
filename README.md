@@ -109,7 +109,7 @@ CSS selectors used by third-party plugins may change after an update. If this ha
 
 1. Upload the `igw-admin-cleanup` folder to the `/wp-content/plugins/` directory, or install the plugin from the WordPress Plugins screen.
 2. Activate IGW Admin Cleanup from the Plugins screen.
-3. Go to Settings → IGW Admin Cleanup.
+3. Go to IGW Admin Cleanup in the WordPress administration menu.
 4. Click "Add rule".
 5. Enter the CSS selector of the element you want to hide.
 6. Select the cleanup action.
@@ -166,6 +166,8 @@ A recently checked rule that has not been detected does not necessarily mean the
 == Changelog ==
 
 = 0.4.0 =
+* Moved IGW Admin Cleanup from Settings to its own top-level administration section.
+* Replaced the plugin name in the admin toolbar with a compact cleanup icon.
 * Added a new Rule Library with ready-to-use cleanup rules for supported WordPress plugins.
 * Added automatic detection of installed plugins to show only relevant library rules by default.
 * Added an option to browse the complete Rule Library, including rules for plugins not installed on the site.
