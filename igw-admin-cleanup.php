@@ -3,7 +3,7 @@
  * Plugin Name:       IGW Admin Cleanup
  * Plugin URI:        https://wordpress.org/plugins/igw-admin-cleanup
  * Description:       Hide unnecessary elements from the WordPress admin panel using configurable cleanup rules.
- * Version:           0.4.0
+ * Version:           0.4.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Francisco Gálvez
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 /**
  * Plugin constants.
  */
-define('IGW_ADMIN_CLEANER_VERSION', '0.4.0');
+define('IGW_ADMIN_CLEANER_VERSION', '0.4.1');
 define('IGW_ADMIN_CLEANER_DB_VERSION', '2');
 
 define('IGW_ADMIN_CLEANER_FILE', __FILE__);

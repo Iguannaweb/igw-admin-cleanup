@@ -4,7 +4,7 @@ Tags: admin, dashboard, cleanup, css, hide
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.4.0
+Stable tag: 0.4.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -165,6 +165,10 @@ A recently checked rule that has not been detected does not necessarily mean the
 
 == Changelog ==
 
+= 0.4.1 =
+* Added new cleanup rules to the Rule Library.
+* Expanded library support for additional plugin notices, promotional elements and premium upsells.
+
 = 0.4.0 =
 * Added a new Rule Library with ready-to-use cleanup rules for supported WordPress plugins.
 * Added automatic detection of installed plugins to show only relevant library rules by default.
@@ -234,6 +238,9 @@ A recently checked rule that has not been detected does not necessarily mean the
 * Added automatic hiding of the closest list item when applicable.
 
 == Upgrade Notice ==
+
+= 0.4.1 =
+Expands the Rule Library with new ready-to-use cleanup rules for supported plugins.
 
 = 0.4.0 =
 Introduces the new Rule Library, making it easy to find and add ready-to-use cleanup rules for supported plugins installed on your site.

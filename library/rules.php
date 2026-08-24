@@ -17,6 +17,8 @@ $library_files = [
 	'limit-login-attempts-reloaded.php',
 	'jeg-elementor-kit.php',
 	'monsterinsights.php',
+	'ultimate-addons-for-elementor.php',
+	'seedpro.php',
 ];
 
 $rules = [];
